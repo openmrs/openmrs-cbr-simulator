@@ -1,0 +1,67 @@
+<!--
+
+    This Source Code Form is subject to the terms of the Mozilla Public License,
+    v. 2.0. If a copy of the MPL was not distributed with this file, You can
+    obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
+    the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
+
+    Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
+    graphic logo is a trademark of OpenMRS Inc.
+
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>CBR Simulator</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="styles/simulator.css">
+    </head>
+    <script type="text/javascript">
+        var OPENMRS_CONTEXT_PATH = 'http://localhost:8080/openmrs';
+    </script>
+    <body>
+        <h1>CBR Simulator</h1>
+
+        <div id="casereport-simulator-boot" ng-app="casereport.simulator.boot" ng-controller="BootController">
+            Loading simulation data<span id="casereport-blinker">.....</span>
+        </div>
+
+        <div id="casereport-simulator" ng-controller="SimulatorController">
+
+            <form class="simple-form-ui" name="simulatorForm" novalidate ng-submit="run()">
+
+                <p>
+                    <button ng-disabled="patientsCreated()" type="button" ng-click="createPatients()">Create Patients</button>
+                </p>
+                <p>
+                    <button type="submit">Run</button>
+                </p>
+
+                <div id="console" ng-show="nextEventIndex > 0"
+                    style="max-height:520px; overflow-y: auto;
+             background-color: #1c2953; color: #00cc00; border: inset #00a4e4 2px;
+             line-height: 1.2; font-size: small; font-family: 'Courier New'; padding: 4px" />
+
+                <br>
+
+            </form>
+
+        </div>
+
+        <script type="text/javascript" src="scripts/lib/jquery/jquery.min.js"></script>
+        <script type="text/javascript" src="scripts/lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="scripts/lib/angular/angular-resource.min.js"></script>
+        <script type="text/javascript" src="scripts/lib/moment/moment.min.js"></script>
+        <script type="text/javascript" src="scripts/angular-common.js"></script>
+        <script type="text/javascript" src="scripts/serverDate.js"></script>
+        <script type="text/javascript" src="scripts/obsService.js"></script>
+        <script type="text/javascript" src="scripts/personService.js"></script>
+        <script type="text/javascript" src="scripts/systemSettingService.js"></script>
+        <script type="text/javascript" src="scripts/simulationService.js"></script>
+        <script type="text/javascript" src="scripts/simulator.js"></script>
+        <script type="text/javascript" src="scripts/data/simulator-dataset-short.js"></script>
+    </body>
+</html>
