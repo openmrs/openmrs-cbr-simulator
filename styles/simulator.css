@@ -17,6 +17,10 @@
   }
 }
 
-#casereport-blinker {
+#blinker {
   animation: blinker 0.7s linear infinite;
+}
+
+.error-msg {
+    color: red; font-weight: bold;
 }

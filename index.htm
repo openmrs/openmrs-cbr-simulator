@@ -26,7 +26,7 @@
         <h1>CBR Simulator</h1>
 
         <div id="casereport-simulator-boot" ng-app="casereport.simulator.boot" ng-controller="BootController">
-            Loading simulation data<span id="casereport-blinker">.....</span>
+            Loading simulation data<span id="blinker">.....</span>
         </div>
 
         <div id="casereport-simulator" ng-controller="SimulatorController">
@@ -34,10 +34,7 @@
             <form class="simple-form-ui" name="simulatorForm" novalidate ng-submit="run()">
 
                 <p>
-                    <button ng-disabled="patientsCreated()" type="button" ng-click="createPatients()">Create Patients</button>
-                </p>
-                <p>
-                    <button type="submit">Run</button>
+                    <button type="submit" ng-disabled="!canRun()">Run</button>
                 </p>
 
                 <div id="console" ng-show="nextEventIndex > 0"
@@ -56,6 +53,7 @@
         <script type="text/javascript" src="scripts/lib/angular/angular-resource.min.js"></script>
         <script type="text/javascript" src="scripts/lib/moment/moment.min.js"></script>
         <script type="text/javascript" src="scripts/angular-common.js"></script>
+        <script type="text/javascript" src="scripts/config.js"></script>
         <script type="text/javascript" src="scripts/serverDate.js"></script>
         <script type="text/javascript" src="scripts/obsService.js"></script>
         <script type="text/javascript" src="scripts/personService.js"></script>

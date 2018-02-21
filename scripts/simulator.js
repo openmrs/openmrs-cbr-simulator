@@ -41,12 +41,17 @@ angular.module("casereport.simulator", [
 
     .run(function($rootScope, SystemSettingService){
         var params1 = {q: 'casereport.simulatorPatientsCreated', v: 'full'};
-        SystemSettingService.getSystemSettings(params1).then(function(results1){
-            if(!results1[0]){
+        SystemSettingService.getSystemSettings(params1).then(function(gp1Response){
+            var results1 = gp1Response.results;
+            if(results1.length == 0 || results1[0].value != 'true'){
+                $rootScope.patientsCreated = false;
                 var params2 = {q: 'casereport.identifierTypeUuid', v: 'full'};
-                SystemSettingService.getSystemSettings(params2).then(function(results2){
-                    if(results2[0]) {
+                SystemSettingService.getSystemSettings(params2).then(function(gp2Response){
+                    var results2 = gp2Response.results;
+                    if(results2.length == 1 && results2[0].value != null) {
                         $rootScope.identifierType = results2[0].value;
+                    } else {
+                        alert('No enterprise identifier type specified');
                     }
                 });
             }else {
@@ -70,9 +75,34 @@ angular.module("casereport.simulator", [
             $scope.eventCount = $scope.dataset.timeline.length;
 
             $scope.run = function(){
+                if(!$rootScope.patientsCreated) {
+                    registerPatients();
+                } else {
+                    runTimeline(true);
+                }
+            }
+
+            $scope.canRun = function(){
+                return $rootScope.patientsCreated || $scope.identifierType != undefined;
+            }
+
+            $scope.displayEvent = function(event){
+                var patient = getPatientById(event.identifier);
+                var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
+                var date = $scope.formatDate(convertToDate(event.date), 'dd-MMM-yyyy');
+                return getEventLabel(event)+" "+name+" on "+date;
+            }
+
+            function runTimeline(resetConsole){
+                if(resetConsole){
+                    resetLogs();
+                }
+                
+                logMessage('Run timeline events...');
+                logMessage('');
                 var events = $scope.dataset.timeline;
                 var count = 0;
-                for(var i in $scope.dataset.timeline){
+                for(var i in events){
                     var identifier = events[i].identifier;
                     SimulationService.getPatientByIdentifier(identifier).then(function(response){
                         var results = response.results;
@@ -86,17 +116,11 @@ angular.module("casereport.simulator", [
                         var patient = results[0];
                         $scope.idPatientUuidMap[patient.patientIdentifier.identifier] = patient.uuid;
                         if(count == events.length){
+                            $scope.nextEventIndex = 0;
                             createNextEvent();
                         }
                     });
                 }
-            }
-
-            $scope.displayEvent = function(event){
-                var patient = getPatientById(event.identifier);
-                var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
-                var date = $scope.formatDate(convertToDate(event.date), 'dd-MMM-yyyy');
-                return getEventLabel(event)+" "+name+" on "+date;
             }
 
             function getEventLabel(event){
@@ -172,17 +196,23 @@ angular.module("casereport.simulator", [
 
             }
 
-            $scope.createPatients = function(){
+            function registerPatients(){
+                logMessage("Register Patients...");
+                logMessage('');
                 var savedCount = 0;
                 var patients = $scope.dataset.patients;
                 $rootScope.patientsCreated = true;
                 for(var i in patients){
+                    logRegisterPatient(patients[i]);
                     var patient = $scope.buildPatient(patients[i]);
                     Patient.save(patient).$promise.then(function(){
                         savedCount++;
                         if(savedCount == patients.length){
                             SimulationService.saveGlobalProperty('casereport.simulatorPatientsCreated', 'true').then(function(){
-                                alert('Created patients successfully');
+                                logMessage('');
+                                logMessage('Registered patients successfully!');
+                                logMessage('');
+                                runTimeline(false);
                             });
                         }
                     });
@@ -202,7 +232,7 @@ angular.module("casereport.simulator", [
                     Person.save(person).$promise.then(function(){
                         $scope.nextEventIndex++;
                         if ($scope.nextEventIndex == $scope.eventCount) {
-
+                            finalizeRunEvents();
                         }else{
                             createNextEvent();
                         }
@@ -212,7 +242,7 @@ angular.module("casereport.simulator", [
                     Obs.save(obs).$promise.then(function () {
                         $scope.nextEventIndex++;
                         if ($scope.nextEventIndex == $scope.eventCount) {
-
+                            finalizeRunEvents();
                         }else{
                             createNextEvent();
                         }
@@ -261,10 +291,35 @@ angular.module("casereport.simulator", [
                 throw Error("Unknown concept for event "+$scope.displayEvent(eventData));;
             }
 
-            function logEvent(){
+            function logMessage(msg){
                 var ele = document.querySelector('#console');
+                angular.element(ele).append('> '+msg+'<br>');
+            }
+
+            function logError(errorMsg){
+                var ele = document.querySelector('#console');
+                angular.element(ele).append('> <span class="error-msg">'+errorMsg+'</span><br>');
+            }
+
+            function resetLogs(){
+                var ele = document.querySelector('#console');
+                angular.element(ele).html('');
+            }
+
+            function logEvent(){
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
-                angular.element(ele).append('> '+$scope.displayEvent(eventData)+'<br>');
+                logMessage($scope.displayEvent(eventData));
+            }
+
+            function finalizeRunEvents(){
+                //Reset for the user to be able to rerun
+                logMessage('');
+                logMessage('Events run successfully!');
+            }
+
+            function logRegisterPatient(patient){
+                var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
+                logMessage("Registering patient: "+name);
             }
 
         }

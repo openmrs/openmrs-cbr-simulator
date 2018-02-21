@@ -6,10 +6,10 @@ angular.module('systemSettingService', ['ngResource', 'simulator.common'])
             query: { method:'GET' }     // override query method to specify that it isn't an array that is returned
         });
     })
-    .factory('SystemSettingService', function(SystemSetting, RestService) {
+    .factory('SystemSettingService', function(SystemSetting) {
     	return {
     		getSystemSettings: function(params) {
-                return RestService.getAllResults(SystemSetting, params);
+                return SystemSetting.query(params).$promise;
     		}
     	}
 	})
