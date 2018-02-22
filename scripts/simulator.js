@@ -286,6 +286,7 @@ angular.module("casereport.simulator", [
             }
 
             function finalizeRunEvents(){
+                $scope.nextEventIndex = 0;
                 //Reset for the user to be able to rerun
                 logMessage('');
                 logMessage('Events run successfully!');
