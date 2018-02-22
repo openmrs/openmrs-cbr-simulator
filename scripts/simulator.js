@@ -40,22 +40,13 @@ angular.module("casereport.simulator", [
     })
 
     .run(function($rootScope, SystemSettingService){
-        var params1 = {q: 'casereport.simulatorPatientsCreated', v: 'full'};
-        SystemSettingService.getSystemSettings(params1).then(function(gp1Response){
-            var results1 = gp1Response.results;
-            if(results1.length == 0 || results1[0].value != 'true'){
-                $rootScope.patientsCreated = false;
-                var params2 = {q: 'casereport.identifierTypeUuid', v: 'full'};
-                SystemSettingService.getSystemSettings(params2).then(function(gp2Response){
-                    var results2 = gp2Response.results;
-                    if(results2.length == 1 && results2[0].value != null) {
-                        $rootScope.identifierType = results2[0].value;
-                    } else {
-                        alert('No enterprise identifier type specified');
-                    }
-                });
-            }else {
-                $rootScope.patientsCreated = true;
+        var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
+        SystemSettingService.getSystemSettings(params).then(function(response){
+            var results = response.results;
+            if(results.length == 1 && results[0].value != null) {
+                $rootScope.identifierType = results[0].value;
+            } else {
+                alert('No enterprise identifier type specified');
             }
         });
 
@@ -65,6 +56,7 @@ angular.module("casereport.simulator", [
 
         function($rootScope, $scope, $filter, SimulationService, Person, Patient, Obs){
             $scope.dataset = dataset;
+            $scope.showConsole = false;
             $scope.artStartConceptUuid = '1255AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.reasonArtStoppedConceptUuid = '1252AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -75,15 +67,12 @@ angular.module("casereport.simulator", [
             $scope.eventCount = $scope.dataset.timeline.length;
 
             $scope.run = function(){
-                if(!$rootScope.patientsCreated) {
-                    registerPatients();
-                } else {
-                    runTimeline(true);
-                }
+                $scope.showConsole = true;
+                runTimeline(true);
             }
 
             $scope.canRun = function(){
-                return $rootScope.patientsCreated || $scope.identifierType != undefined;
+                return $scope.identifierType != undefined;
             }
 
             $scope.displayEvent = function(event){
@@ -100,27 +89,7 @@ angular.module("casereport.simulator", [
                 
                 logMessage('Run timeline events...');
                 logMessage('');
-                var events = $scope.dataset.timeline;
-                var count = 0;
-                for(var i in events){
-                    var identifier = events[i].identifier;
-                    SimulationService.getPatientByIdentifier(identifier).then(function(response){
-                        var results = response.results;
-                        if(results.length == 0){
-                            throw Error("No patient found with the identifier: "+identifier);
-                        }else if(results.length > 1){
-                            throw Error("Found multiple patients with the identifier: "+identifier);
-                        }
-
-                        count++;
-                        var patient = results[0];
-                        $scope.idPatientUuidMap[patient.patientIdentifier.identifier] = patient.uuid;
-                        if(count == events.length){
-                            $scope.nextEventIndex = 0;
-                            createNextEvent();
-                        }
-                    });
-                }
+                processNextEvent();
             }
 
             function getEventLabel(event){
@@ -165,10 +134,6 @@ angular.module("casereport.simulator", [
                 return moment().add(offSetInDays, 'days').format('YYYY-MM-DD');
             }
 
-            $scope.patientsCreated = function(){
-                return $rootScope.patientsCreated;
-            }
-
             $scope.buildPatient = function(patientData){
                 var birthDateStr = $scope.formatDate(convertToDate(patientData.birthdate), 'yyyy-MM-dd');
 
@@ -196,35 +161,44 @@ angular.module("casereport.simulator", [
 
             }
 
-            function registerPatients(){
-                logMessage("Register Patients...");
-                logMessage('');
-                var savedCount = 0;
-                var patients = $scope.dataset.patients;
-                $rootScope.patientsCreated = true;
-                for(var i in patients){
-                    logRegisterPatient(patients[i]);
-                    var patient = $scope.buildPatient(patients[i]);
-                    Patient.save(patient).$promise.then(function(){
-                        savedCount++;
-                        if(savedCount == patients.length){
-                            SimulationService.saveGlobalProperty('casereport.simulatorPatientsCreated', 'true').then(function(){
-                                logMessage('');
-                                logMessage('Registered patients successfully!');
-                                logMessage('');
-                                runTimeline(false);
+            function processNextEvent(){
+                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
+                var patientId = eventData.identifier;
+                var patientUuid = $scope.idPatientUuidMap[patientId];
+                if(!patientUuid) {
+                    var patientData = getPatientById(patientId);
+                    SimulationService.getPatientByIdentifier(patientId).then(function(response){
+                        var results = response.results;
+                        if(results.length == 0){
+                            //First register the patient
+                            logRegisterPatient(patientData);
+                            var patient = $scope.buildPatient(patientData);
+                            Patient.save(patient).$promise.then(function (savedPatient) {
+                                $scope.idPatientUuidMap[patientId] = savedPatient.uuid;
+                                createEvent();
                             });
+                        }else if(results.length > 1){
+                            var errorMsg = "Found multiple patients with the identifier: "+patientId;
+                            logError(errorMsg);
+                            throw Error(errorMsg);
+                        }else {
+                            $scope.idPatientUuidMap[patientId] = results[0].uuid;
+                            createEvent();
                         }
                     });
+                }else{
+                    createEvent();
                 }
             }
 
-            function createNextEvent(){
-                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
+            function createEvent(){
                 logEvent();
+                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
+                var patientUuid = $scope.idPatientUuidMap[eventData.identifier];
+
                 if (eventData.event == "death"){
                     var person =  {
-                        uuid: $scope.idPatientUuidMap[eventData.identifier],
+                        uuid: patientUuid,
                         dead: true,
                         deathDate: getFormattedDate(eventData.date),
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
@@ -234,7 +208,7 @@ angular.module("casereport.simulator", [
                         if ($scope.nextEventIndex == $scope.eventCount) {
                             finalizeRunEvents();
                         }else{
-                            createNextEvent();
+                            processNextEvent();
                         }
                     });
                 } else {
@@ -244,7 +218,7 @@ angular.module("casereport.simulator", [
                         if ($scope.nextEventIndex == $scope.eventCount) {
                             finalizeRunEvents();
                         }else{
-                            createNextEvent();
+                            processNextEvent();
                         }
                     });
                 }
