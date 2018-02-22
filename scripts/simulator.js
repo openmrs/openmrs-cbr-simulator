@@ -34,7 +34,7 @@ angular.module("casereport.simulator", [
 
     .run(function($rootScope, SystemSettingService){
         var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
-        SystemSettingService.getSystemSettings(params).then(function(response){
+        SystemSettingService.getSystemSettings(OPENMRS_CONTEXT_PATH, params).then(function(response){
             var results = response.results;
             if(results.length == 1 && results[0].value != null) {
                 $rootScope.identifierType = results[0].value;

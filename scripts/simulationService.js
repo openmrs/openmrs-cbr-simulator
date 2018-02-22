@@ -8,7 +8,7 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('simulationService', ['ngResource','simulator.common'])
+angular.module('simulationService', ['ngResource', 'simulator.common'])
 
     .factory('Patient', function($resource) {
         return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/patient/:uuid", {
@@ -17,17 +17,13 @@ angular.module('simulationService', ['ngResource','simulator.common'])
         });
     })
 
-    .factory('SimulationService', function(Patient, SystemSettingService, SystemSetting) {
+    .factory('SimulationService', function(Patient) {
 
         return {
 
             getPatientByIdentifier: function(id) {
                 var params = {s: "patientByIdentifier", identifier: id, v: "custom:(uuid,patientIdentifier:(identifier))"};
                 return Patient.get(params).$promise;
-            },
-
-            saveGlobalProperty: function(name, propertyValue){
-                return SystemSetting.save({property: name, value: propertyValue}).$promise;
             }
 
         }
