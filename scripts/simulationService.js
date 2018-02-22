@@ -9,12 +9,14 @@
  */
 
 angular.module('simulationService', ['ngResource','simulator.common'])
+
     .factory('Patient', function($resource) {
-        return $resource("/" + OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/patient/:uuid", {
+        return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/patient/:uuid", {
         },{
             query: { method:'GET' }
         });
     })
+
     .factory('SimulationService', function(Patient, SystemSettingService, SystemSetting) {
 
         return {

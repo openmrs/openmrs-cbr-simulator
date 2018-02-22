@@ -32,13 +32,6 @@ angular.module("casereport.simulator", [
         "personService"
     ])
 
-    .factory('Patient', function($resource) {
-        return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/patient/:uuid", {
-        },{
-            query: { method:'GET' }
-        });
-    })
-
     .run(function($rootScope, SystemSettingService){
         var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
         SystemSettingService.getSystemSettings(params).then(function(response){
