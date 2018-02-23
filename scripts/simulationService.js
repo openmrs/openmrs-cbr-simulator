@@ -8,22 +8,15 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('simulationService', ['ngResource', 'simulator.common'])
+angular.module('simulationService', ['resourceService'])
 
-    .factory('Patient', function($resource) {
-        return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/patient/:uuid", {
-        },{
-            query: { method:'GET' }
-        });
-    })
-
-    .factory('SimulationService', function(Patient) {
+    .factory('SimulationService', function(ResourceService) {
 
         return {
 
-            getPatientByIdentifier: function(id) {
+            getPatientByIdentifier: function(baseUrl, id) {
                 var params = {s: "patientByIdentifier", identifier: id, v: "custom:(uuid,patientIdentifier:(identifier))"};
-                return Patient.get(params).$promise;
+                return ResourceService.getPatientResource(baseUrl).get(params).$promise;
             }
 
         }

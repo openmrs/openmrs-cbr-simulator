@@ -8,15 +8,9 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('obsService', ['ngResource', 'simulator.common'])
-    .factory('Obs', function($resource) {
-        return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/obs/:uuid", {
-            uuid: '@uuid'
-        },{
-            query: { method:'GET', isArray:false } // OpenMRS RESTWS returns { "results": [] }
-        });
-    })
-    .factory('ObsService', function(Obs) {
+angular.module('obsService', ['resourceService'])
+
+    .factory('ObsService', function(ResourceService) {
 
         return {
 
@@ -26,8 +20,8 @@ angular.module('obsService', ['ngResource', 'simulator.common'])
              * @param params to search against
              * @returns $promise of array of matching Obs (REST ref representation by default)
              */
-            getObs: function(params) {
-                return Obs.query(params).$promise.then(function(res) {
+            getObs: function(baseUrl, params) {
+                return ResourceService.getObsResource(baseUrl).query(params).$promise.then(function(res) {
                     return res.results;
                 });
             }

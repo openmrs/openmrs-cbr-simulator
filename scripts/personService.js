@@ -8,26 +8,21 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('personService', ['ngResource', 'simulator.common'])
-    .factory('Person', function($resource) {
-        return $resource(OPENMRS_CONTEXT_PATH  + "/ws/rest/v1/person/:uuid", {
-            uuid: '@uuid'
-        },{
-            query: { method:'GET', isArray:false } // OpenMRS RESTWS returns { "results": [] }
-        });
-    })
-    .factory('PersonService', function(Person) {
+angular.module('personService', ['resourceService'])
+
+    .factory('PersonService', function(ResourceService) {
 
         return {
 
             /**
              * Fetches Persons
              *
+             * @param baseUrl the URL of the OpenMRS instance
              * @param params to search against
              * @returns $promise of array of matching Persons (REST ref representation by default)
              */
-            getPersons: function(params) {
-                return Person.query(params).$promise.then(function(res) {
+            getPersons: function(baseUrl, params) {
+                return ResourceService.getPersonResource(baseUrl).query(params).$promise.then(function(res) {
                     return res.results;
                 });
             }

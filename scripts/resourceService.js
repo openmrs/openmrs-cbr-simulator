@@ -8,17 +8,40 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('resourceService', ['ngResource','simulator.common'])
+angular.module('resourceService', ['ngResource', 'simulator.common'])
 
     .factory('ResourceService', function($resource) {
 
         return {
 
             getSystemSettingResource: function(baseUrl){
-                return $resource(baseUrl  + "/ws/rest/v1/systemsetting/:uuid", {
+                return $resource(baseUrl + "/ws/rest/v1/systemsetting/:uuid", {
                     uuid: '@uuid'
                 },{
-                    query: { method:'GET' }     // override query method to specify that it isn't an array that is returned
+                    query: { method:'GET' } // OpenMRS RESTWS returns { "results": [] }
+                });
+            },
+
+            getPersonResource: function(baseUrl) {
+                return $resource(baseUrl + "/ws/rest/v1/person/:uuid", {
+                    uuid: '@uuid'
+                },{
+                    query: { method:'GET', isArray: false }
+                });
+            },
+
+            getPatientResource: function(baseUrl) {
+                return $resource(baseUrl + "/ws/rest/v1/patient/:uuid", {
+                },{
+                    query: { method:'GET' }
+                });
+            },
+
+            getObsResource: function(baseUrl) {
+                return $resource(baseUrl + "/ws/rest/v1/obs/:uuid", {
+                    uuid: '@uuid'
+                },{
+                    query: { method:'GET', isArray: false }
                 });
             }
 

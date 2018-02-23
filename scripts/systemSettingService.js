@@ -1,4 +1,4 @@
-angular.module('systemSettingService', ['ngResource', 'simulator.common', 'resourceService'])
+angular.module('systemSettingService', ['resourceService'])
 
     .factory('SystemSettingService', function(ResourceService) {
     	return {
