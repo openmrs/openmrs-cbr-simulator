@@ -13,18 +13,9 @@ angular.module('personService', ['resourceService'])
     .factory('PersonService', function(ResourceService) {
 
         return {
-
-            /**
-             * Fetches Persons
-             *
-             * @param baseUrl the URL of the OpenMRS instance
-             * @param params to search against
-             * @returns $promise of array of matching Persons (REST ref representation by default)
-             */
-            getPersons: function(baseUrl, params) {
-                return ResourceService.getPersonResource(baseUrl).query(params).$promise.then(function(res) {
-                    return res.results;
-                });
+            savePerson: function(server, params) {
+                return ResourceService.getPersonResource(server).save(params).$promise;
             }
         }
+
     });

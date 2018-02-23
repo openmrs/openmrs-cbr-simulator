@@ -8,43 +8,76 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-angular.module('resourceService', ['ngResource', 'simulator.common'])
+angular.module('resourceService', ['ngResource'])
 
     .factory('ResourceService', function($resource) {
 
         return {
 
-            getSystemSettingResource: function(baseUrl){
-                return $resource(baseUrl + "/ws/rest/v1/systemsetting/:uuid", {
-                    uuid: '@uuid'
-                },{
-                    query: { method:'GET' } // OpenMRS RESTWS returns { "results": [] }
+            getSystemSettingResource: function(server){
+                return $resource(server.baseUrl + "/ws/rest/v1/systemsetting", {},
+                {
+                    query: {
+                        method: 'GET',
+                        isArray: false,  // OpenMRS RESTWS returns { "results": [] }
+                        headers: getAuthorizationHeaders(server)
+                    }
                 });
             },
 
-            getPersonResource: function(baseUrl) {
-                return $resource(baseUrl + "/ws/rest/v1/person/:uuid", {
+            getPersonResource: function(server) {
+                return $resource(server.baseUrl + "/ws/rest/v1/person/:uuid", {
                     uuid: '@uuid'
-                },{
-                    query: { method:'GET', isArray: false }
+                },
+                {
+                    query: {
+                        method: 'GET',
+                        isArray: false,
+                        headers: getAuthorizationHeaders(server)
+                    },
+                    save: {
+                        method: 'POST',
+                        headers: getAuthorizationHeaders(server)
+                    }
                 });
             },
 
-            getPatientResource: function(baseUrl) {
-                return $resource(baseUrl + "/ws/rest/v1/patient/:uuid", {
-                },{
-                    query: { method:'GET' }
+            getPatientResource: function(server) {
+                return $resource(server.baseUrl + "/ws/rest/v1/patient", {},
+                {
+                    query: {
+                        method: 'GET',
+                        isArray: false,
+                        headers: getAuthorizationHeaders(server)
+                    },
+                    save: {
+                        method: 'POST',
+                        headers: getAuthorizationHeaders(server)
+                    }
                 });
             },
 
-            getObsResource: function(baseUrl) {
-                return $resource(baseUrl + "/ws/rest/v1/obs/:uuid", {
-                    uuid: '@uuid'
-                },{
-                    query: { method:'GET', isArray: false }
+            getObsResource: function(server) {
+                return $resource(server.baseUrl + "/ws/rest/v1/obs", {},
+                {
+                    query: {
+                        method: 'GET',
+                        isArray: false,
+                        headers: getAuthorizationHeaders(server)
+                    },
+                    save: {
+                        method: 'POST',
+                        headers: getAuthorizationHeaders(server)
+                    }
                 });
             }
 
+        }
+
+        function getAuthorizationHeaders(server){
+            return {
+                'Authorization': 'Basic '+getCredentials()[server.id]
+            }
         }
 
     });

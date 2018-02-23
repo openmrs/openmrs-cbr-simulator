@@ -13,17 +13,9 @@ angular.module('obsService', ['resourceService'])
     .factory('ObsService', function(ResourceService) {
 
         return {
-
-            /**
-             * Fetches Obs
-             *
-             * @param params to search against
-             * @returns $promise of array of matching Obs (REST ref representation by default)
-             */
-            getObs: function(baseUrl, params) {
-                return ResourceService.getObsResource(baseUrl).query(params).$promise.then(function(res) {
-                    return res.results;
-                });
+            saveObs: function(server, params) {
+                return ResourceService.getObsResource(server).save(params).$promise;
             }
         }
+        
     });

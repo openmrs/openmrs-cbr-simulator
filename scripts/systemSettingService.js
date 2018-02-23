@@ -2,8 +2,9 @@ angular.module('systemSettingService', ['resourceService'])
 
     .factory('SystemSettingService', function(ResourceService) {
     	return {
-    		getSystemSettings: function(baseUrl, params) {
-                return ResourceService.getSystemSettingResource(baseUrl).query(params).$promise;
+    		getSystemSettings: function(server) {
+                var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
+                return ResourceService.getSystemSettingResource(server).query(params).$promise;
     		}
     	}
 	})

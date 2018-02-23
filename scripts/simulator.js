@@ -12,6 +12,7 @@
 /*============== GLOBAL VARIABLES =================*/
 
 var credentialsKey = 'CREDENTIALS_KEY';
+var areCredentialsSet = 'ARE_CREDENTIALS_SET';
 
 var EventResult = {
     SKIP: "skip",
@@ -39,13 +40,21 @@ angular.module("casereport.simulator.boot", [])
 
 angular.module("casereport.simulator", [
         "simulator.filters",
-        "simulationService",
         "systemSettingService",
+        "personService",
+        "patientService",
+        "obsService"
     ])
 
-    .controller("SimulatorController", ["$scope", "$filter", "SimulationService" , "SystemSettingService", "ResourceService",
+    .controller("SimulatorController", [
+        "$scope",
+        "$filter",
+        "SystemSettingService",
+        "PersonService",
+        "PatientService", 
+        "ObsService",
 
-        function($scope, $filter, SimulationService, SystemSettingService, ResourceService){
+        function($scope, $filter, SystemSettingService, PersonService, PatientService, ObsService){
             $scope.dataset = dataset;
             $scope.showConsole = false;
             $scope.isRunning = false;
@@ -64,9 +73,7 @@ angular.module("casereport.simulator", [
             $scope.serverCheckedForIdType = {};
             
             for(var i in config.openmrsInstances) {
-                var server = config.openmrsInstances[i];
-                $scope.serverIdPasswordMap[server.id] = null;
-                //$scope.serverCheckedForIdType[server.id] = false;
+                $scope.serverIdPasswordMap[config.openmrsInstances[i].id] = null;
             }
 
             $scope.run = function(){
@@ -87,11 +94,12 @@ angular.module("casereport.simulator", [
                     credentialsMap[server.id] = btoa(server.username+":"+password);
                 }
 
-                window.sessionStorage.setItem(credentialsKey, credentialsMap);
+                sessionStorage.setItem(credentialsKey, JSON.stringify(credentialsMap));
+                sessionStorage.setItem(areCredentialsSet, true);
             }
 
             $scope.areCredentialsSet = function(){
-                return getCredentials() != null;
+                return sessionStorage.getItem(areCredentialsSet);
             }
 
             $scope.displayEvent = function(event) {
@@ -185,18 +193,16 @@ angular.module("casereport.simulator", [
                 var patientId = eventData.identifier;
                 var patientUuid = $scope.idPatientUuidMap[patientId];
                 var server = getServer();
-                var baseUrl = server.baseUrl;
                 if(!patientUuid) {
                     var patientData = getPatientById(patientId);
-                    SimulationService.getPatientByIdentifier(baseUrl, patientId).then(function(response){
+                    PatientService.getPatientByIdentifier(server, patientId).then(function(response){
                         var results = response.results;
                         if(results.length == 0){
                             //First register the patient
-                            var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
                             if(!$scope.serverIdentifierTypeMap[server.id]) {
                                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                                 if(!$scope.serverCheckedForIdType[server.id]) {
-                                    SystemSettingService.getSystemSettings(baseUrl, params).then(function (response) {
+                                    SystemSettingService.getSystemSettings(server).then(function (response) {
                                         var results = response.results;
                                         if (results.length == 1 && results[0].value != null) {
                                             $scope.serverIdentifierTypeMap[server.id] = results[0].value;
@@ -239,7 +245,7 @@ angular.module("casereport.simulator", [
             function registerPatient(patientData, identifier, server){
                 logRegisterPatient(patientData, server);
                 var patient = $scope.buildPatient(patientData, server);
-                ResourceService.getPatientResource(server.baseUrl).save(patient).$promise.then(function (savedPatient) {
+                PatientService.savePatient(server, patient).then(function (savedPatient) {
                     $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
                     createEvent(server);
                 });
@@ -257,12 +263,12 @@ angular.module("casereport.simulator", [
                         deathDate: getFormattedDate(eventData.date),
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
                     }
-                    ResourceService.getPersonResource(server.baseUrl).save(person).$promise.then(function(){
+                    PersonService.savePerson(server, person).then(function(){
                         postEventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
-                    ResourceService.getObsResource(server.baseUrl).save(obs).$promise.then(function () {
+                    ObsService.saveObs(server, obs).then(function () {
                         postEventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 }
@@ -370,5 +376,5 @@ angular.module("casereport.simulator", [
 /*============== GLOBAL FUNCTIONS =================*/
 
 function getCredentials(){
-    return window.sessionStorage.getItem(credentialsKey);
+    return JSON.parse(sessionStorage.getItem(credentialsKey));
 }
