@@ -39,5 +39,8 @@
 
 .error-msg {
     color: red;
-    font-weight: bold;
+}
+
+.warning-msg {
+    color: #fff40f;
 }

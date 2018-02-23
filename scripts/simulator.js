@@ -8,6 +8,19 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
+
+/*============== GLOBAL VARIABLES =================*/
+
+var credentialsKey = 'CREDENTIALS_KEY';
+
+var EventResult = {
+    SKIP: "skip",
+    SUCCESS: "success",
+    FAIL: "fail"
+}
+
+/*============== END GLOBAL VARIABLES =============*/
+
 angular.module("casereport.simulator.boot", [])
 
     .controller("BootController", ["$scope",
@@ -28,28 +41,15 @@ angular.module("casereport.simulator", [
         "simulator.filters",
         "simulationService",
         "systemSettingService",
-        "obsService",
-        "personService"
     ])
 
-    .run(function($rootScope, SystemSettingService){
-        var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
-        SystemSettingService.getSystemSettings('http://localhost:8080/openmrs', params).then(function(response){
-            var results = response.results;
-            if(results.length == 1 && results[0].value != null) {
-                $rootScope.identifierType = results[0].value;
-            } else {
-                alert('No enterprise identifier type specified');
-            }
-        });
+    .controller("SimulatorController", ["$scope", "$filter", "SimulationService" , "SystemSettingService", "ResourceService",
 
-    })
-
-    .controller("SimulatorController", ["$rootScope", "$scope", "$filter", "SimulationService", "ResourceService",
-
-        function($rootScope, $scope, $filter, SimulationService, ResourceService){
+        function($scope, $filter, SimulationService, SystemSettingService, ResourceService){
             $scope.dataset = dataset;
             $scope.showConsole = false;
+            $scope.isRunning = false;
+            $scope.skipFailedEvents = true;
             $scope.artStartConceptUuid = '1255AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.reasonArtStoppedConceptUuid = '1252AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -58,22 +58,25 @@ angular.module("casereport.simulator", [
             $scope.executedEventIndex = -1;
             $scope.nextEventIndex = 0;
             $scope.eventCount = $scope.dataset.timeline.length;
-            $scope.credentialsKey = 'CREDENTIALS_KEY';
             $scope.servers = config.openmrsInstances;
             $scope.serverIdPasswordMap = {};
+            $scope.serverIdentifierTypeMap = {};
+            $scope.serverCheckedForIdType = {};
             
             for(var i in config.openmrsInstances) {
                 var server = config.openmrsInstances[i];
                 $scope.serverIdPasswordMap[server.id] = null;
+                //$scope.serverCheckedForIdType[server.id] = false;
             }
 
             $scope.run = function(){
+                $scope.isRunning = true;
                 $scope.showConsole = true;
                 runTimeline(true);
             }
 
             $scope.canRun = function(){
-                return $scope.identifierType != undefined;
+                return !$scope.isRunning;
             }
 
             $scope.setCredentials = function(){
@@ -83,16 +86,12 @@ angular.module("casereport.simulator", [
                     var password = $scope.serverIdPasswordMap[server.id];
                     credentialsMap[server.id] = btoa(server.username+":"+password);
                 }
-                
-                window.sessionStorage.setItem($scope.credentialsKey, credentialsMap);
-            }
 
-            $scope.getCredentials = function(){
-                return window.sessionStorage.getItem($scope.credentialsKey);
+                window.sessionStorage.setItem(credentialsKey, credentialsMap);
             }
 
             $scope.areCredentialsSet = function(){
-                return $scope.getCredentials() != null;
+                return getCredentials() != null;
             }
 
             $scope.displayEvent = function(event) {
@@ -154,7 +153,7 @@ angular.module("casereport.simulator", [
                 return moment().add(offSetInDays, 'days').format('YYYY-MM-DD');
             }
 
-            $scope.buildPatient = function(patientData){
+            $scope.buildPatient = function(patientData, server){
                 var birthDateStr = $scope.formatDate(convertToDate(patientData.birthdate), 'yyyy-MM-dd');
 
                 var person = {
@@ -171,7 +170,7 @@ angular.module("casereport.simulator", [
 
                 var identifier =  {
                     identifier: patientData.identifier,
-                    identifierType: $rootScope.identifierType
+                    identifierType: $scope.serverIdentifierTypeMap[server.id]
                 }
 
                 return {
@@ -193,14 +192,29 @@ angular.module("casereport.simulator", [
                         var results = response.results;
                         if(results.length == 0){
                             //First register the patient
-                            logRegisterPatient(patientData, server);
-                            var patient = $scope.buildPatient(patientData);
-                            ResourceService.getPatientResource(baseUrl).save(patient).$promise.then(function (savedPatient) {
-                                $scope.idPatientUuidMap[patientId] = savedPatient.uuid;
-                                createEvent(server);
-                            });
+                            var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
+                            if(!$scope.serverIdentifierTypeMap[server.id]) {
+                                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
+                                if(!$scope.serverCheckedForIdType[server.id]) {
+                                    SystemSettingService.getSystemSettings(baseUrl, params).then(function (response) {
+                                        var results = response.results;
+                                        if (results.length == 1 && results[0].value != null) {
+                                            $scope.serverIdentifierTypeMap[server.id] = results[0].value;
+                                            registerPatient(patientData, patientId, server);
+                                        } else {
+                                            logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
+                                            $scope.serverCheckedForIdType[server.id] = true;
+                                            afterEventProcessing(EventResult.SKIP, eventData);
+                                        }
+                                    });
+                                }else{
+                                    afterEventProcessing(EventResult.SKIP, eventData);
+                                }
+                            }else{
+                                registerPatient(patientData, patientId, server);
+                            }
                         }else if(results.length > 1){
-                            var errorMsg = "Found multiple patients with the identifier: "+patientId;
+                            var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
                             logError(errorMsg);
                             throw Error(errorMsg);
                         }else {
@@ -218,6 +232,19 @@ angular.module("casereport.simulator", [
                 return servers[Math.floor(Math.random() * servers.length)];
             }
 
+            function getServerDisplay(server){
+                return server.name+" ("+server.id+")";
+            }
+
+            function registerPatient(patientData, identifier, server){
+                logRegisterPatient(patientData, server);
+                var patient = $scope.buildPatient(patientData, server);
+                ResourceService.getPatientResource(server.baseUrl).save(patient).$promise.then(function (savedPatient) {
+                    $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
+                    createEvent(server);
+                });
+            }
+
             function createEvent(server){
                 logEvent(server);
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
@@ -231,28 +258,33 @@ angular.module("casereport.simulator", [
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
                     }
                     ResourceService.getPersonResource(server.baseUrl).save(person).$promise.then(function(){
-                        $scope.nextEventIndex++;
-                        if ($scope.nextEventIndex == $scope.eventCount) {
-                            finalizeRunEvents();
-                        }else{
-                            processNextEvent();
-                        }
+                        afterEventProcessing(EventResult.SUCCESS, eventData);
                     });
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
                     ResourceService.getObsResource(server.baseUrl).save(obs).$promise.then(function () {
-                        $scope.nextEventIndex++;
-                        if ($scope.nextEventIndex == $scope.eventCount) {
-                            finalizeRunEvents();
-                        }else{
-                            processNextEvent();
-                        }
+                        afterEventProcessing(EventResult.SUCCESS, eventData);
                     });
                 }
             }
 
             function getFormattedDate(dateStr){
                 return $scope.formatDate(convertToDate(dateStr), 'yyyy-MM-dd');
+            }
+
+            function afterEventProcessing(result, eventData){
+                if(result === EventResult.SKIP){
+                    if ($scope.skipFailedEvents) {
+                        logWarning("Skipping: " + $scope.displayEvent(eventData));
+                    }
+                }
+
+                $scope.nextEventIndex++;
+                if ($scope.nextEventIndex == $scope.eventCount) {
+                    finalizeRunEvents();
+                }else{
+                    processNextEvent();
+                }
             }
 
             function buildObs(eventData, patientUuid) {
@@ -289,12 +321,17 @@ angular.module("casereport.simulator", [
                     }
                 }
 
-                throw Error("Unknown concept for event "+$scope.displayEvent(eventData));;
+                throw Error("Unknown concept for event "+$scope.displayEvent(eventData));
             }
 
             function logMessage(msg){
                 var ele = document.querySelector('#console');
                 angular.element(ele).append('> '+msg+'<br>');
+            }
+
+            function logWarning(warningMsg){
+                var ele = document.querySelector('#console');
+                angular.element(ele).append('> <span class="warning-msg">'+warningMsg+'</span><br>');
             }
 
             function logError(errorMsg){
@@ -313,10 +350,11 @@ angular.module("casereport.simulator", [
             }
 
             function finalizeRunEvents(){
+                $scope.isRunning = false;
                 $scope.nextEventIndex = 0;
                 //Reset for the user to be able to rerun
                 logMessage('');
-                logMessage('Events run successfully!');
+                logMessage('Done!');
             }
 
             function logRegisterPatient(patient, server){
@@ -327,3 +365,10 @@ angular.module("casereport.simulator", [
         }
 
     ]);
+
+
+/*============== GLOBAL FUNCTIONS =================*/
+
+function getCredentials(){
+    return window.sessionStorage.getItem(credentialsKey);
+}
