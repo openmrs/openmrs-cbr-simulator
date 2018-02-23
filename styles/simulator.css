@@ -33,6 +33,11 @@
     padding: 4px
 }
 
+.label {
+    font-weight: bold;
+}
+
 .error-msg {
-    color: red; font-weight: bold;
+    color: red;
+    font-weight: bold;
 }

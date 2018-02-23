@@ -19,7 +19,7 @@ angular.module("casereport.simulator.boot", [])
                 $("#casereport-simulator-boot").hide();
                 $("#casereport-simulator").show();
 
-            }, 30);
+            }, 20);
         }
 
     ]);
@@ -58,6 +58,14 @@ angular.module("casereport.simulator", [
             $scope.executedEventIndex = -1;
             $scope.nextEventIndex = 0;
             $scope.eventCount = $scope.dataset.timeline.length;
+            $scope.credentialsKey = 'CREDENTIALS_KEY';
+            $scope.servers = config.openmrsInstances;
+            $scope.serverIdPasswordMap = {};
+            
+            for(var i in config.openmrsInstances) {
+                var server = config.openmrsInstances[i];
+                $scope.serverIdPasswordMap[server.id] = null;
+            }
 
             $scope.run = function(){
                 $scope.showConsole = true;
@@ -68,11 +76,30 @@ angular.module("casereport.simulator", [
                 return $scope.identifierType != undefined;
             }
 
-            $scope.displayEvent = function(event){
+            $scope.setCredentials = function(){
+                var credentialsMap = {};
+                for(var i in config.openmrsInstances){
+                    var server = config.openmrsInstances[i];
+                    var password = $scope.serverIdPasswordMap[server.id];
+                    credentialsMap[server.id] = btoa(server.username+":"+password);
+                }
+                
+                window.sessionStorage.setItem($scope.credentialsKey, credentialsMap);
+            }
+
+            $scope.getCredentials = function(){
+                return window.sessionStorage.getItem($scope.credentialsKey);
+            }
+
+            $scope.areCredentialsSet = function(){
+                return $scope.getCredentials() != null;
+            }
+
+            $scope.displayEvent = function(event) {
                 var patient = getPatientById(event.identifier);
-                var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
+                var name = patient.givenName + " " + patient.middleName + " " + patient.familyName;
                 var date = $scope.formatDate(convertToDate(event.date), 'dd-MMM-yyyy');
-                return getEventLabel(event)+" "+name+" on "+date;
+                return getEventLabel(event) + " " + name + " on " + date;
             }
 
             function runTimeline(resetConsole){

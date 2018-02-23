@@ -32,15 +32,42 @@
         <div id="casereport-simulator" ng-controller="SimulatorController">
 
             <form class="simple-form-ui" name="simulatorForm" novalidate ng-submit="run()">
+                <div ng-show="!areCredentialsSet()">
+                    <h4>OpenMRS Instance(s) Password Form</h4>
+                    <div ng-repeat="server in servers">
+                        <fieldset>
+                            <legend>{{ server.name }}</legend>
+                            <table cellpadding="5" cellspacing="5" border="0">
+                                <tr>
+                                    <td class="label">Base URL</td>
+                                    <td>{{ server.baseUrl }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Username</td>
+                                    <td>{{ server.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Password</td>
+                                    <td><input type="password" ng-model="serverIdPasswordMap[server.id]"></td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                        <br>
+                    </div>
+                    <p>
+                        <button type="button" ng-click="setCredentials()">Done</button>
+                    </p>
+                    <br>
+                </div>
+                <div ng-show="areCredentialsSet()">
+                    <p>
+                        <button type="submit" ng-disabled="!canRun()">Run</button>
+                    </p>
 
-                <p>
-                    <button type="submit" ng-disabled="!canRun()">Run</button>
-                </p>
+                    <div id="console" ng-show="showConsole" />
 
-                <div id="console" ng-show="showConsole" />
-
-                <br>
-
+                    <br>
+                </div>
             </form>
 
         </div>
