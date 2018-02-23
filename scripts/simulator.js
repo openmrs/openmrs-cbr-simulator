@@ -204,11 +204,11 @@ angular.module("casereport.simulator", [
                                         } else {
                                             logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
                                             $scope.serverCheckedForIdType[server.id] = true;
-                                            afterEventProcessing(EventResult.SKIP, eventData);
+                                            postEventResultHandler(EventResult.SKIP, eventData);
                                         }
                                     });
                                 }else{
-                                    afterEventProcessing(EventResult.SKIP, eventData);
+                                    postEventResultHandler(EventResult.SKIP, eventData);
                                 }
                             }else{
                                 registerPatient(patientData, patientId, server);
@@ -258,12 +258,12 @@ angular.module("casereport.simulator", [
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
                     }
                     ResourceService.getPersonResource(server.baseUrl).save(person).$promise.then(function(){
-                        afterEventProcessing(EventResult.SUCCESS, eventData);
+                        postEventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
                     ResourceService.getObsResource(server.baseUrl).save(obs).$promise.then(function () {
-                        afterEventProcessing(EventResult.SUCCESS, eventData);
+                        postEventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 }
             }
@@ -272,7 +272,7 @@ angular.module("casereport.simulator", [
                 return $scope.formatDate(convertToDate(dateStr), 'yyyy-MM-dd');
             }
 
-            function afterEventProcessing(result, eventData){
+            function postEventResultHandler(result, eventData){
                 if(result === EventResult.SKIP){
                     if ($scope.skipFailedEvents) {
                         logWarning("Skipping: " + $scope.displayEvent(eventData));
