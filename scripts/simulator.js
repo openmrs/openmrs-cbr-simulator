@@ -12,7 +12,6 @@
 /*============== GLOBAL VARIABLES =================*/
 
 var credentialsKey = 'CREDENTIALS_KEY';
-var areCredentialsSet = 'ARE_CREDENTIALS_SET';
 
 var EventResult = {
     SKIP: "skip",
@@ -95,11 +94,10 @@ angular.module("casereport.simulator", [
                 }
 
                 sessionStorage.setItem(credentialsKey, JSON.stringify(credentialsMap));
-                sessionStorage.setItem(areCredentialsSet, true);
             }
 
             $scope.areCredentialsSet = function(){
-                return sessionStorage.getItem(areCredentialsSet);
+                return getCredentials() != null;
             }
 
             $scope.displayEvent = function(event) {
