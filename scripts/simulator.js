@@ -200,17 +200,19 @@ angular.module("casereport.simulator", [
                             if(!$scope.serverIdentifierTypeMap[server.id]) {
                                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                                 if(!$scope.serverCheckedForIdType[server.id]) {
-                                    SystemSettingService.getSystemSettings(server).then(function (response) {
-                                        var results = response.results;
-                                        if (results.length == 1 && results[0].value != null) {
-                                            $scope.serverIdentifierTypeMap[server.id] = results[0].value;
-                                            registerPatient(patientData, patientId, server);
-                                        } else {
-                                            logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
-                                            $scope.serverCheckedForIdType[server.id] = true;
-                                            eventResultHandler(EventResult.SKIP, eventData);
+                                    SystemSettingService.getSystemSettings(server).then(
+                                        function (response) {
+                                            var results = response.results;
+                                            if (results.length == 1 && results[0].value != null) {
+                                                $scope.serverIdentifierTypeMap[server.id] = results[0].value;
+                                                registerPatient(patientData, patientId, server);
+                                            } else {
+                                                logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
+                                                $scope.serverCheckedForIdType[server.id] = true;
+                                                eventResultHandler(EventResult.SKIP, eventData);
+                                            }
                                         }
-                                    });
+                                    );
                                 }else{
                                     eventResultHandler(EventResult.SKIP, eventData);
                                 }
@@ -243,10 +245,12 @@ angular.module("casereport.simulator", [
             function registerPatient(patientData, identifier, server){
                 logRegisterPatient(patientData, server);
                 var patient = $scope.buildPatient(patientData, server);
-                PatientService.savePatient(server, patient).then(function (savedPatient) {
-                    $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
-                    createEvent(server);
-                });
+                PatientService.savePatient(server, patient).then(
+                    function (savedPatient) {
+                        $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
+                        createEvent(server);
+                    }
+                );
             }
 
             function createEvent(server){
@@ -261,14 +265,18 @@ angular.module("casereport.simulator", [
                         deathDate: getFormattedDate(eventData.date),
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
                     }
-                    PersonService.savePerson(server, person).then(function(){
-                        eventResultHandler(EventResult.SUCCESS, eventData);
-                    });
+                    PersonService.savePerson(server, person).then(
+                        function(){
+                            eventResultHandler(EventResult.SUCCESS, eventData);
+                        }
+                    );
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
-                    ObsService.saveObs(server, obs).then(function () {
-                        eventResultHandler(EventResult.SUCCESS, eventData);
-                    });
+                    ObsService.saveObs(server, obs).then(
+                        function () {
+                            eventResultHandler(EventResult.SUCCESS, eventData);
+                        }
+                    );
                 }
             }
 
