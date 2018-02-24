@@ -76,7 +76,7 @@ angular.module('resourceService', ['ngResource'])
 
         function getAuthorizationHeaders(server){
             return {
-                'Authorization': 'Basic '+getCredentials()[server.id]
+                'Authorization': 'Basic '+Util.getCredentials()[server.id]
             }
         }
 

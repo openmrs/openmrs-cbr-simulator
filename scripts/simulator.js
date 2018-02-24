@@ -11,7 +11,7 @@
 
 /*============== GLOBAL VARIABLES =================*/
 
-var credentialsKey = 'CREDENTIALS_KEY';
+
 
 var EventResult = {
     SKIP: "skip",
@@ -93,48 +93,28 @@ angular.module("casereport.simulator", [
                     credentialsMap[server.id] = btoa(server.username+":"+password);
                 }
 
-                sessionStorage.setItem(credentialsKey, JSON.stringify(credentialsMap));
+                Util.setCredentials(credentialsMap);
             }
 
             $scope.areCredentialsSet = function(){
-                return getCredentials() != null;
+                return Util.getCredentials() != null;
             }
 
             $scope.displayEvent = function(event) {
                 var patient = getPatientById(event.identifier);
                 var name = patient.givenName + " " + patient.middleName + " " + patient.familyName;
                 var date = $scope.formatDate(convertToDate(event.date), 'dd-MMM-yyyy');
-                return getEventLabel(event) + " " + name + " on " + date;
+                return Util.getEventLabel(event) + " " + name + " on " + date;
             }
 
             function runTimeline(resetConsole){
                 if(resetConsole){
-                    resetLogs();
+                    Console.clear();
                 }
                 
-                logMessage('Processing events...');
-                logMessage('');
+                Console.info('Processing events...');
+                Console.info('');
                 processNextEvent();
-            }
-
-            function getEventLabel(event){
-                switch(event.event){
-                    case 'artStartDate': {
-                        return "Start ART for";
-                    }
-                    case 'cd4Count': {
-                        return "CD4 Count of "+event.value+" for";
-                    }
-                    case 'viralLoad': {
-                        return "Viral Load of "+event.value+" for";
-                    }
-                    case 'reasonArtStopped': {
-                        return "Stop ART because of weight change for";
-                    }
-                    case 'death': {
-                        return "Death of";
-                    }
-                }
             }
 
             function getPatientById(id){
@@ -208,7 +188,7 @@ angular.module("casereport.simulator", [
                                                     $scope.serverIdentifierTypeMap[server.id] = results[0].value;
                                                     registerPatient(patientData, patientId, server);
                                                 } else {
-                                                    logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
+                                                    Console.error('No enterprise identifier type specified for server: ' + getServerDisplay(server));
                                                     $scope.serverCheckedForIdType[server.id] = true;
                                                     eventResultHandler(EventResult.SKIP, eventData);
                                                 }
@@ -222,7 +202,7 @@ angular.module("casereport.simulator", [
                                 }
                             }else if(results.length > 1){
                                 var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
-                                logError(errorMsg);
+                                Console.error(errorMsg);
                                 throw Error(errorMsg);
                             }else {
                                 $scope.idPatientUuidMap[patientId] = results[0].uuid;
@@ -245,7 +225,7 @@ angular.module("casereport.simulator", [
             }
 
             function registerPatient(patientData, identifier, server){
-                logRegisterPatient(patientData, server);
+                Util.logRegisterPatient(patientData, server);
                 var patient = $scope.buildPatient(patientData, server);
                 PatientService.savePatient(server, patient).then(
                     function (savedPatient) {
@@ -289,7 +269,7 @@ angular.module("casereport.simulator", [
             function eventResultHandler(result, eventData){
                 if(result === EventResult.SKIP){
                     if ($scope.skipFailedEvents) {
-                        logWarning("Skipping: " + $scope.displayEvent(eventData));
+                        Console.warn("Skipping: " + $scope.displayEvent(eventData));
                     }
                 }
 
@@ -335,54 +315,23 @@ angular.module("casereport.simulator", [
                     }
                 }
 
+                Console.error("Unknown concept for event "+$scope.displayEvent(eventData));
                 throw Error("Unknown concept for event "+$scope.displayEvent(eventData));
-            }
-
-            function logMessage(msg){
-                var ele = document.querySelector('#console');
-                angular.element(ele).append('> '+msg+'<br>');
-            }
-
-            function logWarning(warningMsg){
-                var ele = document.querySelector('#console');
-                angular.element(ele).append('> <span class="warning-msg">'+warningMsg+'</span><br>');
-            }
-
-            function logError(errorMsg){
-                var ele = document.querySelector('#console');
-                angular.element(ele).append('> <span class="error-msg">'+errorMsg+'</span><br>');
-            }
-
-            function resetLogs(){
-                var ele = document.querySelector('#console');
-                angular.element(ele).html('');
             }
 
             function logEvent(server){
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
-                logMessage($scope.displayEvent(eventData)+" at "+server.name);
+                Console.info($scope.displayEvent(eventData)+" at "+server.name);
             }
 
             function finalizeRunEvents(){
                 $scope.isRunning = false;
                 $scope.nextEventIndex = 0;
                 //Reset for the user to be able to rerun
-                logMessage('');
-                logMessage('Done!');
-            }
-
-            function logRegisterPatient(patient, server){
-                var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
-                logMessage("Registering patient: "+name+" at "+server.name);
+                Console.info('');
+                Console.info('Done!');
             }
 
         }
 
     ]);
-
-
-/*============== GLOBAL FUNCTIONS =================*/
-
-function getCredentials(){
-    return JSON.parse(sessionStorage.getItem(credentialsKey));
-}
