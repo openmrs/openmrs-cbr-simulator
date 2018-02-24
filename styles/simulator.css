@@ -24,7 +24,7 @@
 #console {
     max-height:520px;
     overflow-y: auto;
-    background-color: #1c2953;
+    background-color: #29446b;
     color: #00cc00;
     border: inset #00a4e4 2px;
     line-height: 1.2;
@@ -38,9 +38,9 @@
 }
 
 .error-msg {
-    color: red;
+    color: #ff5913;
 }
 
 .warning-msg {
-    color: #fff40f;
+    color: #ffde11;
 }
