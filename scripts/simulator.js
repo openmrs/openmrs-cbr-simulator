@@ -8,6 +8,7 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
+var authInterceptorId = 'http-server-error-interceptor';
 
 var PostEventAction = {
     SKIP: "skip",
@@ -38,6 +39,23 @@ angular.module("casereport.simulator", [
         "patientService",
         "obsService"
     ])
+
+    .factory(authInterceptorId, function($q, $rootScope) {
+        return {
+            responseError: function(response) {
+                if (response.status !== 401 && response.status !== 403) {
+                    Console.warn("Invalid authentication credentials, please make sure " +
+                        "the passwords for all defined OpenMRS instance are correct and " +
+                        "the accounts have the necessary privileges");
+                }
+                return $q.reject(response);
+            }
+        }
+    }).
+
+    config(function($httpProvider) {
+        $httpProvider.interceptors.push(authInterceptorId);
+    })
 
     .controller("SimulatorController", [
         "$scope",
