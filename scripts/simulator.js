@@ -112,7 +112,7 @@ angular.module("casereport.simulator", [
                     resetLogs();
                 }
                 
-                logMessage('Run timeline events...');
+                logMessage('Processing events...');
                 logMessage('');
                 processNextEvent();
             }
@@ -208,11 +208,11 @@ angular.module("casereport.simulator", [
                                         } else {
                                             logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
                                             $scope.serverCheckedForIdType[server.id] = true;
-                                            postEventResultHandler(EventResult.SKIP, eventData);
+                                            eventResultHandler(EventResult.SKIP, eventData);
                                         }
                                     });
                                 }else{
-                                    postEventResultHandler(EventResult.SKIP, eventData);
+                                    eventResultHandler(EventResult.SKIP, eventData);
                                 }
                             }else{
                                 registerPatient(patientData, patientId, server);
@@ -262,12 +262,12 @@ angular.module("casereport.simulator", [
                         causeOfDeath: '125574AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
                     }
                     PersonService.savePerson(server, person).then(function(){
-                        postEventResultHandler(EventResult.SUCCESS, eventData);
+                        eventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
                     ObsService.saveObs(server, obs).then(function () {
-                        postEventResultHandler(EventResult.SUCCESS, eventData);
+                        eventResultHandler(EventResult.SUCCESS, eventData);
                     });
                 }
             }
@@ -276,7 +276,7 @@ angular.module("casereport.simulator", [
                 return $scope.formatDate(convertToDate(dateStr), 'yyyy-MM-dd');
             }
 
-            function postEventResultHandler(result, eventData){
+            function eventResultHandler(result, eventData){
                 if(result === EventResult.SKIP){
                     if ($scope.skipFailedEvents) {
                         logWarning("Skipping: " + $scope.displayEvent(eventData));
