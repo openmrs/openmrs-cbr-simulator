@@ -29,7 +29,7 @@
         <div id="casereport-simulator" ng-controller="SimulatorController">
 
             <form class="simple-form-ui" name="simulatorForm" novalidate ng-submit="run()">
-                <div ng-show="!areCredentialsSet()">
+                <div ng-show="showPasswordsForm()">
                     <h4>OpenMRS Instance(s) Password Form</h4>
                     <div ng-repeat="server in servers">
                         <fieldset>
@@ -53,12 +53,18 @@
                     </div>
                     <p>
                         <button type="button" ng-click="setCredentials()">Done</button>
+                        <button type="button" ng-show="changingPasswords" ng-click="changingPasswords = false">
+                            Cancel
+                        </button>
                     </p>
                     <br>
                 </div>
-                <div ng-show="areCredentialsSet()">
+                <div ng-show="!showPasswordsForm()">
                     <p>
                         <button type="submit" ng-disabled="!canRun()">Run</button>
+                        <button type="button" ng-show="!changingPasswords" ng-click="changingPasswords = true">
+                            Change Password(s)
+                        </button>
                     </p>
 
                     <div id="console" ng-show="showConsole" />

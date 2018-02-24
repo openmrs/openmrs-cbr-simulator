@@ -9,17 +9,11 @@
  */
 
 
-/*============== GLOBAL VARIABLES =================*/
-
-
-
 var EventResult = {
     SKIP: "skip",
     SUCCESS: "success",
     FAIL: "fail"
 }
-
-/*============== END GLOBAL VARIABLES =============*/
 
 angular.module("casereport.simulator.boot", [])
 
@@ -56,6 +50,7 @@ angular.module("casereport.simulator", [
         function($scope, $filter, SystemSettingService, PersonService, PatientService, ObsService){
             $scope.dataset = dataset;
             $scope.showConsole = false;
+            $scope.changingPasswords = false;
             $scope.isRunning = false;
             $scope.skipFailedEvents = true;
             $scope.artStartConceptUuid = '1255AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -86,6 +81,10 @@ angular.module("casereport.simulator", [
             }
 
             $scope.setCredentials = function(){
+                if($scope.changingPasswords){
+                    $scope.changePasswords();
+                }
+                
                 var credentialsMap = {};
                 for(var i in config.openmrsInstances){
                     var server = config.openmrsInstances[i];
@@ -96,8 +95,13 @@ angular.module("casereport.simulator", [
                 Util.setCredentials(credentialsMap);
             }
 
-            $scope.areCredentialsSet = function(){
-                return Util.getCredentials() != null;
+            $scope.showPasswordsForm = function(){
+                return Util.getCredentials() == null || $scope.changingPasswords;
+            }
+
+            $scope.changePasswords = function(){
+                $scope.changingPasswords = false;
+                $scope.setCredentials();
             }
 
             $scope.displayEvent = function(event) {
