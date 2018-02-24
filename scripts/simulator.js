@@ -9,7 +9,7 @@
  */
 
 
-var EventResult = {
+var PostEventAction = {
     SKIP: "skip",
     SUCCESS: "success",
     FAIL: "fail"
@@ -106,9 +106,8 @@ angular.module("casereport.simulator", [
 
             $scope.displayEvent = function(event) {
                 var patient = getPatientById(event.identifier);
-                var name = patient.givenName + " " + patient.middleName + " " + patient.familyName;
                 var date = $scope.formatDate(convertToDate(event.date), 'dd-MMM-yyyy');
-                return Util.getEventLabel(event) + " " + name + " on " + date;
+                return Util.getEventLabelPrefix(event) + " " + Util.getPatientDisplay(patient) + " on " + date;
             }
 
             function runTimeline(resetConsole){
@@ -181,28 +180,32 @@ angular.module("casereport.simulator", [
                         function(response){
                             var results = response.results;
                             if(results.length == 0){
+                                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                                 //First register the patient
                                 if(!$scope.serverIdentifierTypeMap[server.id]) {
-                                    var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                                     if(!$scope.serverCheckedForIdType[server.id]) {
                                         SystemSettingService.getSystemSettings(server).then(
                                             function (response) {
                                                 var results = response.results;
                                                 if (results.length == 1 && results[0].value != null) {
                                                     $scope.serverIdentifierTypeMap[server.id] = results[0].value;
-                                                    registerPatient(patientData, patientId, server);
+                                                    registerPatient(patientData, patientId, server, eventData);
                                                 } else {
-                                                    Console.error('No enterprise identifier type specified for server: ' + getServerDisplay(server));
+                                                    Console.error('No enterprise identifier type specified for ' + getServerDisplay(server));
                                                     $scope.serverCheckedForIdType[server.id] = true;
-                                                    eventResultHandler(EventResult.SKIP, eventData);
+                                                    handlePostEventAction(PostEventAction.SKIP, eventData);
                                                 }
+                                            },
+                                            function(){
+                                                Console.error("An error occurred while looking up the enterprise identifier type for "+getServerDisplay(server));
+                                                handlePostEventAction(PostEventAction.FAIL, eventData);
                                             }
                                         );
                                     }else{
-                                        eventResultHandler(EventResult.SKIP, eventData);
+                                        handlePostEventAction(PostEventAction.SKIP, eventData);
                                     }
                                 }else{
-                                    registerPatient(patientData, patientId, server);
+                                    registerPatient(patientData, patientId, server, eventData);
                                 }
                             }else if(results.length > 1){
                                 var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
@@ -212,6 +215,10 @@ angular.module("casereport.simulator", [
                                 $scope.idPatientUuidMap[patientId] = results[0].uuid;
                                 createEvent(server);
                             }
+                        },
+                        function(){
+                            Console.error("An error occurred while looking up the patient with id: "+patientId+" at "+getServerDisplay(server));
+                            handlePostEventAction(PostEventAction.FAIL, eventData);
                         }
                     );
                 }else{
@@ -228,13 +235,17 @@ angular.module("casereport.simulator", [
                 return server.name+" ("+server.id+")";
             }
 
-            function registerPatient(patientData, identifier, server){
+            function registerPatient(patientData, identifier, server, eventData){
                 Util.logRegisterPatient(patientData, server);
                 var patient = $scope.buildPatient(patientData, server);
                 PatientService.savePatient(server, patient).then(
                     function (savedPatient) {
                         $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
                         createEvent(server);
+                    },
+                    function(){
+                        Console.error("An error occurred registering patient with "+Util.getPatientDisplay(patient));
+                        handlePostEventAction(PostEventAction.FAIL, eventData);
                     }
                 );
             }
@@ -253,14 +264,22 @@ angular.module("casereport.simulator", [
                     }
                     PersonService.savePerson(server, person).then(
                         function(){
-                            eventResultHandler(EventResult.SUCCESS, eventData);
+                            handlePostEventAction(PostEventAction.SUCCESS, eventData);
+                        },
+                        function(){
+                            Console.error("An error occurred processing: "+$scope.displayEvent(eventData));
+                            handlePostEventAction(PostEventAction.FAIL, eventData);
                         }
                     );
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
                     ObsService.saveObs(server, obs).then(
                         function () {
-                            eventResultHandler(EventResult.SUCCESS, eventData);
+                            handlePostEventAction(PostEventAction.SUCCESS, eventData);
+                        } ,
+                        function(){
+                            Console.error("An error occurred processing: "+$scope.displayEvent(eventData));
+                            handlePostEventAction(PostEventAction.FAIL, eventData);
                         }
                     );
                 }
@@ -270,9 +289,9 @@ angular.module("casereport.simulator", [
                 return $scope.formatDate(convertToDate(dateStr), 'yyyy-MM-dd');
             }
 
-            function eventResultHandler(result, eventData){
-                if(result === EventResult.SKIP){
-                    if ($scope.skipFailedEvents) {
+            function handlePostEventAction(action, eventData){
+                if(action != PostEventAction.SUCCESS){
+                    if (action == PostEventAction.SKIP || $scope.skipFailedEvents) {
                         Console.warn("Skipping: " + $scope.displayEvent(eventData));
                     }
                 }

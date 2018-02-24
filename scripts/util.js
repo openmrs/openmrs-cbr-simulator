@@ -20,12 +20,15 @@ var Util = {
         sessionStorage.setItem(credentialsKey, JSON.stringify(credentialsMap));
     },
 
-    logRegisterPatient: function (patient, server){
-        var name = patient.givenName+" "+patient.middleName+" "+patient.familyName;
-        Console.info("Registering patient: "+name+" at "+server.name);
+    getPatientDisplay: function (patient) {
+        return patient.givenName+" "+patient.middleName+" "+patient.familyName;
     },
 
-    getEventLabel: function (event){
+    logRegisterPatient: function (patient, server){
+        Console.info("Registering patient: "+this.getPatientDisplay(patient)+" at "+server.name);
+    },
+
+    getEventLabelPrefix: function (event){
         switch(event.event){
             case 'artStartDate': {
                 return "Start ART for";
