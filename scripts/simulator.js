@@ -8,7 +8,7 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-var authInterceptorId = 'http-server-error-interceptor';
+var authInterceptorId = 'http-auth-error-interceptor';
 
 var PostEventAction = {
     SKIP: "skip",
