@@ -193,41 +193,43 @@ angular.module("casereport.simulator", [
                 var server = getServer();
                 if(!patientUuid) {
                     var patientData = getPatientById(patientId);
-                    PatientService.getPatientByIdentifier(server, patientId).then(function(response){
-                        var results = response.results;
-                        if(results.length == 0){
-                            //First register the patient
-                            if(!$scope.serverIdentifierTypeMap[server.id]) {
-                                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
-                                if(!$scope.serverCheckedForIdType[server.id]) {
-                                    SystemSettingService.getSystemSettings(server).then(
-                                        function (response) {
-                                            var results = response.results;
-                                            if (results.length == 1 && results[0].value != null) {
-                                                $scope.serverIdentifierTypeMap[server.id] = results[0].value;
-                                                registerPatient(patientData, patientId, server);
-                                            } else {
-                                                logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
-                                                $scope.serverCheckedForIdType[server.id] = true;
-                                                eventResultHandler(EventResult.SKIP, eventData);
+                    PatientService.getPatientByIdentifier(server, patientId).then(
+                        function(response){
+                            var results = response.results;
+                            if(results.length == 0){
+                                //First register the patient
+                                if(!$scope.serverIdentifierTypeMap[server.id]) {
+                                    var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
+                                    if(!$scope.serverCheckedForIdType[server.id]) {
+                                        SystemSettingService.getSystemSettings(server).then(
+                                            function (response) {
+                                                var results = response.results;
+                                                if (results.length == 1 && results[0].value != null) {
+                                                    $scope.serverIdentifierTypeMap[server.id] = results[0].value;
+                                                    registerPatient(patientData, patientId, server);
+                                                } else {
+                                                    logError('No enterprise identifier type specified for server: ' + getServerDisplay(server));
+                                                    $scope.serverCheckedForIdType[server.id] = true;
+                                                    eventResultHandler(EventResult.SKIP, eventData);
+                                                }
                                             }
-                                        }
-                                    );
+                                        );
+                                    }else{
+                                        eventResultHandler(EventResult.SKIP, eventData);
+                                    }
                                 }else{
-                                    eventResultHandler(EventResult.SKIP, eventData);
+                                    registerPatient(patientData, patientId, server);
                                 }
-                            }else{
-                                registerPatient(patientData, patientId, server);
+                            }else if(results.length > 1){
+                                var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
+                                logError(errorMsg);
+                                throw Error(errorMsg);
+                            }else {
+                                $scope.idPatientUuidMap[patientId] = results[0].uuid;
+                                createEvent(server);
                             }
-                        }else if(results.length > 1){
-                            var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
-                            logError(errorMsg);
-                            throw Error(errorMsg);
-                        }else {
-                            $scope.idPatientUuidMap[patientId] = results[0].uuid;
-                            createEvent(server);
                         }
-                    });
+                    );
                 }else{
                     createEvent(server);
                 }
