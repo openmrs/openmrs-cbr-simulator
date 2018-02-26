@@ -1,7 +1,11 @@
+### OS ###
+*.DS_Store
+
+### IDE ###
 /.settings
 /.project
-.idea/
-
 /.idea
-*.iml
-*.DS_Store
+
+### Project ###
+/target
+
