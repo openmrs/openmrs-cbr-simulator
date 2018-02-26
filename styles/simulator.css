@@ -25,7 +25,7 @@
     max-height:520px;
     overflow-y: auto;
     background-color: #29446b;
-    color: #00cc00;
+    color: #b4b4b4;
     border: inset #00a4e4 2px;
     line-height: 1.2;
     font-size: small;
@@ -39,6 +39,10 @@
 
 .error-msg {
     color: #ff5913;
+}
+
+.success-msg {
+    color: #00cc00;
 }
 
 .warning-msg {

@@ -10,12 +10,6 @@
 
 var authInterceptorId = 'http-auth-error-interceptor';
 
-var PostEventAction = {
-    SKIP: "skip",
-    SUCCESS: "success",
-    FAIL: "fail"
-}
-
 angular.module("casereport.simulator.boot", [])
 
     .controller("BootController", ["$scope",
@@ -43,9 +37,9 @@ angular.module("casereport.simulator", [
     .factory(authInterceptorId, function($q, $rootScope) {
         return {
             responseError: function(response) {
-                if (response.status !== 401 && response.status !== 403) {
+                if (response.status == 401 || response.status == 403) {
                     Console.warn("Invalid authentication credentials, please make sure " +
-                        "the passwords for all defined OpenMRS instance are correct and " +
+                        "the passwords for all defined OpenMRS instances are correct and " +
                         "the accounts have the necessary privileges");
                 }
                 return $q.reject(response);
@@ -70,7 +64,6 @@ angular.module("casereport.simulator", [
             $scope.showConsole = false;
             $scope.changingPasswords = false;
             $scope.isRunning = false;
-            $scope.skipFailedEvents = true;
             $scope.artStartConceptUuid = '1255AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.reasonArtStoppedConceptUuid = '1252AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -82,7 +75,6 @@ angular.module("casereport.simulator", [
             $scope.servers = config.openmrsInstances;
             $scope.serverIdPasswordMap = {};
             $scope.serverIdentifierTypeMap = {};
-            $scope.serverCheckedForIdType = {};
             
             for(var i in config.openmrsInstances) {
                 $scope.serverIdPasswordMap[config.openmrsInstances[i].id] = null;
@@ -198,45 +190,38 @@ angular.module("casereport.simulator", [
                         function(response){
                             var results = response.results;
                             if(results.length == 0){
-                                var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                                 //First register the patient
                                 if(!$scope.serverIdentifierTypeMap[server.id]) {
-                                    if(!$scope.serverCheckedForIdType[server.id]) {
-                                        SystemSettingService.getSystemSettings(server).then(
-                                            function (response) {
-                                                var results = response.results;
-                                                if (results.length == 1 && results[0].value != null) {
-                                                    $scope.serverIdentifierTypeMap[server.id] = results[0].value;
-                                                    registerPatient(patientData, patientId, server, eventData);
-                                                } else {
-                                                    Console.error('No enterprise identifier type specified for ' + getServerDisplay(server));
-                                                    $scope.serverCheckedForIdType[server.id] = true;
-                                                    handlePostEventAction(PostEventAction.SKIP, eventData);
-                                                }
-                                            },
-                                            function(){
-                                                Console.error("An error occurred while looking up the enterprise identifier type for "+getServerDisplay(server));
-                                                handlePostEventAction(PostEventAction.FAIL, eventData);
+                                    SystemSettingService.getSystemSettings(server).then(
+                                        function (response) {
+                                            var results = response.results;
+                                            if (results.length == 1 && results[0].value != null) {
+                                                $scope.serverIdentifierTypeMap[server.id] = results[0].value;
+                                                registerPatient(patientData, patientId, server, eventData);
+                                            } else {
+                                                var errMsg = 'No enterprise identifier type specified for ' + getServerDisplay(server);
+                                                handlePostEventAction(false, server, errMsg);
                                             }
-                                        );
-                                    }else{
-                                        handlePostEventAction(PostEventAction.SKIP, eventData);
-                                    }
+                                        },
+                                        function(){
+                                            var errMsg = 'An error occurred while looking up the enterprise identifier type for '+getServerDisplay(server);
+                                            handlePostEventAction(false, server, errMsg);
+                                        }
+                                    );
                                 }else{
                                     registerPatient(patientData, patientId, server, eventData);
                                 }
                             }else if(results.length > 1){
-                                var errorMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
-                                Console.error(errorMsg);
-                                throw Error(errorMsg);
+                                var errMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
+                                handlePostEventAction(false, server, errMsg);
                             }else {
                                 $scope.idPatientUuidMap[patientId] = results[0].uuid;
                                 createEvent(server);
                             }
                         },
                         function(){
-                            Console.error("An error occurred while looking up the patient with id: "+patientId+" at "+getServerDisplay(server));
-                            handlePostEventAction(PostEventAction.FAIL, eventData);
+                            var errMsg = "An error occurred while looking up the patient with id: "+patientId+" at "+getServerDisplay(server);
+                            handlePostEventAction(false, server, errMsg);
                         }
                     );
                 }else{
@@ -262,14 +247,13 @@ angular.module("casereport.simulator", [
                         createEvent(server);
                     },
                     function(){
-                        Console.error("An error occurred registering patient with "+Util.getPatientDisplay(patient));
-                        handlePostEventAction(PostEventAction.FAIL, eventData);
+                        var errMsg = "An error occurred while registering patient with "+Util.getPatientDisplay(patient);
+                        handlePostEventAction(false, server, errMsg);
                     }
                 );
             }
 
             function createEvent(server){
-                logEvent(server);
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                 var patientUuid = $scope.idPatientUuidMap[eventData.identifier];
 
@@ -282,22 +266,22 @@ angular.module("casereport.simulator", [
                     }
                     PersonService.savePerson(server, person).then(
                         function(){
-                            handlePostEventAction(PostEventAction.SUCCESS, eventData);
+                            handlePostEventAction(true, server);
                         },
                         function(){
-                            Console.error("An error occurred processing: "+$scope.displayEvent(eventData));
-                            handlePostEventAction(PostEventAction.FAIL, eventData);
+                            var errMsg = "An error occurred processing: "+$scope.displayEvent(eventData);
+                            handlePostEventAction(false, server, errMsg);
                         }
                     );
                 } else {
                     var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
                     ObsService.saveObs(server, obs).then(
                         function () {
-                            handlePostEventAction(PostEventAction.SUCCESS, eventData);
+                            handlePostEventAction(true, server);
                         } ,
                         function(){
-                            Console.error("An error occurred processing: "+$scope.displayEvent(eventData));
-                            handlePostEventAction(PostEventAction.FAIL, eventData);
+                            var errMsg = "An error occurred processing: "+$scope.displayEvent(eventData);
+                            handlePostEventAction(false, server, errMsg);
                         }
                     );
                 }
@@ -307,15 +291,14 @@ angular.module("casereport.simulator", [
                 return $scope.formatDate(convertToDate(dateStr), 'yyyy-MM-dd');
             }
 
-            function handlePostEventAction(action, eventData){
-                if(action != PostEventAction.SUCCESS){
-                    if (action == PostEventAction.SKIP || $scope.skipFailedEvents) {
-                        Console.warn("Skipping: " + $scope.displayEvent(eventData));
-                    }
+            function handlePostEventAction(wasSuccessful, server, errorMsg){
+                logEvent(server);
+                if(!wasSuccessful){
+                    Console.error(errorMsg);
                 }
 
                 $scope.nextEventIndex++;
-                if ($scope.nextEventIndex == $scope.eventCount) {
+                if (!wasSuccessful || $scope.nextEventIndex == $scope.eventCount) {
                     finalizeRunEvents();
                 }else{
                     processNextEvent();
