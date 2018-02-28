@@ -47,6 +47,7 @@
                         <header>license-header.txt</header>
                         <excludes>
                             <exclude>scripts/lib/**</exclude>
+                            <exclude>readme.txt</exclude>
                         </excludes>
                     </configuration>
                     <executions>
