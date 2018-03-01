@@ -80,6 +80,8 @@ angular.module("casereport.simulator", [
                 $scope.serverIdPasswordMap[config.openmrsInstances[i].id] = null;
             }
 
+            $scope.dataset.timeline = _.sortBy($scope.dataset.timeline, 'date');
+
             $scope.run = function(){
                 $scope.isRunning = true;
                 $scope.showConsole = true;
