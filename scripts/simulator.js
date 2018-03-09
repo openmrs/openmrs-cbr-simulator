@@ -249,7 +249,7 @@ angular.module("casereport.simulator", [
                         createEvent(server);
                     },
                     function(){
-                        var errMsg = "An error occurred while registering patient with "+Util.getPatientDisplay(patient);
+                        var errMsg = "An error occurred while registering patient with "+Util.getPatientDisplay(patientData);
                         handlePostEventAction(false, server, errMsg);
                     }
                 );
