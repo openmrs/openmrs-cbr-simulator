@@ -111,7 +111,7 @@ var dataset = {
         },
         {
             "date": -1823,
-            "event": "death",
+            "event": "deathdate",
             "identifier": "8AEUX"
         },
         {

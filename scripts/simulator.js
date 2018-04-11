@@ -259,7 +259,7 @@ angular.module("casereport.simulator", [
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                 var patientUuid = $scope.idPatientUuidMap[eventData.identifier];
 
-                if (eventData.event == "death"){
+                if (eventData.event == "deathdate"){
                     var person =  {
                         uuid: patientUuid,
                         dead: true,

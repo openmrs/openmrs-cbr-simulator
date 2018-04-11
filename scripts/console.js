@@ -8,14 +8,14 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-var consoleElementId = '#console';
+var consoleEle = document.querySelector('#console');
 
 var Console = {
 
     info: function (msg, cssClass){
-        var ele = document.querySelector(consoleElementId);
         var clazz = !cssClass ? '' : cssClass;
-        angular.element(ele).append('> <span class="'+clazz+'">'+msg+'</span><br>');
+        angular.element(consoleEle).append('> <span class="'+clazz+'">'+msg+'</span><br>');
+        this.scrollToBottom();
     },
 
     warn: function (warningMsg){
@@ -27,8 +27,11 @@ var Console = {
     },
 
     clear: function (){
-        var ele = document.querySelector(consoleElementId);
-        angular.element(ele).html('');
+        angular.element(consoleEle).html('');
+    },
+
+    scrollToBottom: function (){
+        consoleEle.scrollTop = consoleEle.scrollHeight;
     }
     
 };
