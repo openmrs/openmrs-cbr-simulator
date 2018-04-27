@@ -45,6 +45,10 @@ OpenMRS instance, you need to make the extra configurations below for each insta
 - Go to Home -> Case Reports -> Configure
 - Set the value of the 'Enable Cors' field to true and save the changes, this grants the
   simulator access to OpenMRS instances' rest APIs from a browser.
+- Make sure no patient identifier type is marked as required otherwise the simulator will fail
+  since the it doesn't assign all identifier types to the patients it creates. To do this
+  you will need to go to Home -> Configure Metadata -> Manage Patient Identifier Types, edit each
+  identifier type and make sure none has the 'Is required' check box checked.
 
 If you wish to have the generated case reports in the OpenMRS instances to get auto submitted
 as the simulator is running, you will need to make sure that the respective scheduled tasks are
