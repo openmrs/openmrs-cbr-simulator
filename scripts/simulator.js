@@ -36,7 +36,7 @@ angular.module("casereport.simulator", [
 
     .factory(authInterceptorId, function($q, $rootScope) {
         return {
-            responseError: function(response) {console.log(response);
+            responseError: function(response) {
                 if (response.status == -1) {
                     Console.warn("Can't reach the server at "+response.config.url);
                 }else if (response.status == 401 || response.status == 403) {
@@ -296,8 +296,9 @@ angular.module("casereport.simulator", [
             }
 
             function handlePostEventAction(wasSuccessful, server, errorMsg){
-                logEvent(server);
-                if(!wasSuccessful){
+                if(wasSuccessful){
+                    logEvent(server);
+                }else {
                     Console.error(errorMsg);
                 }
 
