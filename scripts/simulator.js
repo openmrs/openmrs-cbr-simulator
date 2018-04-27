@@ -196,22 +196,28 @@ angular.module("casereport.simulator", [
                             if(results.length == 0){
                                 //First register the patient
                                 if(!$scope.serverIdentifierTypeMap[server.id]) {
-                                    SystemSettingService.getSystemSettings(server).then(
-                                        function (response) {
-                                            var results = response.results;
-                                            if (results.length == 1 && results[0].value != null) {
-                                                $scope.serverIdentifierTypeMap[server.id] = results[0].value;
-                                                registerPatient(patientData, patientId, server, eventData);
+                                    SystemSettingService.getIdentifierMappings(server).then(
+                                        function(response){
+                                            if(response.results.length == 1){
+                                                var gpValue = response.results[0].value;
+                                                if(gpValue && gpValue.trim().length > 0){
+                                                    var mappings = gpValue.split(',');
+                                                    for(var i in mappings){
+                                                        var uuid = mappings[i].split(':')[0].trim();
+                                                        $scope.serverIdentifierTypeMap[server.id] = uuid;
+                                                        break;
+                                                    }
+                                                    registerPatient(patientData, patientId, server, eventData);
+                                                }
                                             } else {
-                                                var errMsg = 'No enterprise identifier type specified for ' + getServerDisplay(server);
+                                                var errMsg = 'No identifier mappings found for '+getServerDisplay(server);
                                                 handlePostEventAction(false, server, errMsg);
                                             }
                                         },
                                         function(){
-                                            var errMsg = 'An error occurred while looking up the enterprise identifier type for '+getServerDisplay(server);
+                                            var errMsg = 'An error occurred while looking up the identifier type mappings for '+getServerDisplay(server);
                                             handlePostEventAction(false, server, errMsg);
-                                        }
-                                    );
+                                        });
                                 }else{
                                     registerPatient(patientData, patientId, server, eventData);
                                 }

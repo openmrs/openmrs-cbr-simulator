@@ -12,9 +12,9 @@ angular.module('systemSettingService', ['resourceService'])
 
     .factory('SystemSettingService', function(ResourceService) {
     	return {
-    		getSystemSettings: function(server) {
-                var params = {q: 'casereport.identifierTypeUuid', v: 'full'};
+    		getIdentifierMappings: function(server) {
+                var params = {q: "casereport.identifierTypeMappings", v: "custom:(value)"};
                 return ResourceService.getSystemSettingResource(server).query(params).$promise;
-    		}
+            }
     	}
 	})
