@@ -36,8 +36,10 @@ angular.module("casereport.simulator", [
 
     .factory(authInterceptorId, function($q, $rootScope) {
         return {
-            responseError: function(response) {
-                if (response.status == 401 || response.status == 403) {
+            responseError: function(response) {console.log(response);
+                if (response.status == -1) {
+                    Console.warn("Can't reach the server at "+response.config.url);
+                }else if (response.status == 401 || response.status == 403) {
                     Console.warn("Invalid authentication credentials, please make sure " +
                         "the passwords for all defined OpenMRS instances are correct and " +
                         "the accounts have the necessary privileges");
