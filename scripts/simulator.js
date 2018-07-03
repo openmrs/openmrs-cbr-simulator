@@ -76,7 +76,6 @@ angular.module("casereport.simulator", [
             $scope.eventCount = $scope.dataset.timeline.length;
             $scope.servers = config.openmrsInstances;
             $scope.serverIdPasswordMap = {};
-            $scope.serverIdentifierTypeMap = {};
             
             for(var i in config.openmrsInstances) {
                 $scope.serverIdPasswordMap[config.openmrsInstances[i].id] = null;
@@ -173,7 +172,7 @@ angular.module("casereport.simulator", [
 
                 var identifier =  {
                     identifier: patientData.identifier,
-                    identifierType: $scope.serverIdentifierTypeMap[server.id]
+                    identifierType: server.patientIdentifierTypeUuid
                 }
 
                 return {
@@ -195,32 +194,7 @@ angular.module("casereport.simulator", [
                             var results = response.results;
                             if(results.length == 0){
                                 //First register the patient
-                                if(!$scope.serverIdentifierTypeMap[server.id]) {
-                                    SystemSettingService.getIdentifierMappings(server).then(
-                                        function(response){
-                                            if(response.results.length == 1){
-                                                var gpValue = response.results[0].value;
-                                                if(gpValue && gpValue.trim().length > 0){
-                                                    var mappings = gpValue.split(',');
-                                                    for(var i in mappings){
-                                                        var uuid = mappings[i].split(':')[0].trim();
-                                                        $scope.serverIdentifierTypeMap[server.id] = uuid;
-                                                        break;
-                                                    }
-                                                    registerPatient(patientData, patientId, server, eventData);
-                                                }
-                                            } else {
-                                                var errMsg = 'No identifier mappings found for '+getServerDisplay(server);
-                                                handlePostEventAction(false, server, errMsg);
-                                            }
-                                        },
-                                        function(){
-                                            var errMsg = 'An error occurred while looking up the identifier type mappings for '+getServerDisplay(server);
-                                            handlePostEventAction(false, server, errMsg);
-                                        });
-                                }else{
-                                    registerPatient(patientData, patientId, server, eventData);
-                                }
+                                registerPatient(patientData, patientId, server, eventData);
                             }else if(results.length > 1){
                                 var errMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
                                 handlePostEventAction(false, server, errMsg);
