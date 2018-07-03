@@ -12,18 +12,19 @@ var config = {
     /*
      * OpenMRS instances configuration fields
      * 
-     * id       : a value that uniquely identifies the instance
-     * name     : a logical name for the instance
-     * baseUrl  : the base URL pointing to the instance
-     * username : the OpenMRS username, MUST have the necessary privileges
-     * uuid     : the uuid of the patient identifier type to use when registering new patients
+     * id                       : a value that uniquely identifies the instance
+     * name                     : a logical name for the instance
+     * baseUrl                  : the base URL pointing to the instance
+     * username                 : the OpenMRS username, MUST have the necessary privileges
+     * patientIdentifierTypeUuid: the uuid of the patient identifier type to use when registering new patients
      */
     openmrsInstances : [
         {
             id: 1,
             name: "",
             baseUrl: "",
-            username: ''
+            username: '',
+            patientIdentifierTypeUuid: ''
         }
     ]
 }

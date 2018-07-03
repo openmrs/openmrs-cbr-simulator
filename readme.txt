@@ -19,19 +19,22 @@ Below is an example configuration for 3 instances.
               id: 1,
               name: "Kampala Health Center",
               baseUrl: "http://myIpAddress1:myPort1/openmrs",
-              username: 'admin'
+              username: 'admin',
+              patientIdentifierTypeUuid: 'UUID-1'
           },
           {
               id: 2,
               name: "Indianapolis Health Center",
               baseUrl: "http://myIpAddress2:myPort2/openmrs",
-              username: 'admin'
+              username: 'admin',
+              patientIdentifierTypeUuid: 'UUID-2'
           },
           {
               id: 3,
               name: "Nairobi Health Center",
               baseUrl: "http://myIpAddress3:myPort3/openmrs",
-              username: 'admin'
+              username: 'admin',
+              patientIdentifierTypeUuid: 'UUID-3'
           }
       ]
   }
