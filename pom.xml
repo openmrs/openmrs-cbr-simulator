@@ -34,6 +34,7 @@
         <compilerPluginVerison>3.3</compilerPluginVerison>
         <assemblyPluginVersion>3.1.0</assemblyPluginVersion>
         <licencePluginVerison>3.0</licencePluginVerison>
+        <dockerPluginVersion>0.26.0</dockerPluginVersion>
     </properties>
 
     <build>
@@ -48,6 +49,7 @@
                         <excludes>
                             <exclude>scripts/lib/**</exclude>
                             <exclude>readme.txt</exclude>
+                            <exclude>docker/Dockerfile</exclude>
                         </excludes>
                     </configuration>
                     <executions>
@@ -82,6 +84,41 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>${dockerPluginVersion}</version>
+                    <executions><!--
+                        <execution>
+                            <id>remove-docker-image</id>
+                            <phase>clean</phase>
+                            <goals>
+                                <goal>remove</goal>
+                            </goals>
+                        </execution>-->
+                        <execution>
+                            <id>build-docker-image</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                            <configuration>
+                                <images>
+                                    <image>
+                                        <name>wluyima/${archiveName}</name>
+                                        <build>
+                                            <from>nginx</from>
+                                            <assembly>
+                                                <targetDir>/usr/share/nginx/html</targetDir>
+                                                <descriptor>${project.basedir}/assembly.xml</descriptor>
+                                            </assembly>
+                                        </build>
+                                    </image>
+                                </images>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -92,6 +129,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

@@ -48,23 +48,26 @@ OpenMRS instance, you need to make the extra configurations below for each insta
 - Go to Home -> Case Reports -> Configure
 - Set the value of the 'Enable Cors' field to true and save the changes, this grants the
   simulator access to OpenMRS instances' rest APIs from a browser.
-- Make sure no patient identifier type is marked as required otherwise the simulator will fail
-  since the it doesn't assign all identifier types to the patients it creates. To do this
-  you will need to go to Home -> Configure Metadata -> Manage Patient Identifier Types, edit each
-  identifier type and make sure none has the 'Is required' check box checked.
+- Make sure the configured patient identifier type does not require a location, to do this you will
+  need to navigate to Home -> Configure Metadata -> Manage Patient Identifier Types, select the configured
+  identifier type and make sure the location behavior field is set to 'Not Used'.
 
 If you wish to have the generated case reports in the OpenMRS instances to get auto submitted
 as the simulator is running, you will need to make sure that the respective scheduled tasks are
 started, the value of the 'Auto Submit Provider' field is set and also that the 'Auto Submit'
-scheduler task property value(s) are set to true for the corresponding tasks, for more on these
-configurations see the module's documentation at
+scheduler task property value(s) are set to true for the corresponding tasks.
+
+It's recommended to always first stop the task if it's already running before editing it otherwise it
+will keep overwriting your changes.
+
+For more on these configurations see the module's documentation at
 https://docs.google.com/document/d/1tutlA3EZ8X0rqR7Rp1XnPWNFwZY72l1g1CQ_5ZhahyA
 
 
 
 RUNNING THE SIMULATOR
 =====================
-- Open the index.htm file at the root of the unzipped folder in the browser, this can be easily
+- Open the index.html file at the root of the unzipped folder in the browser, this can be easily
   achieved by double clicking the file for most operating systems.
 
 - The first time you run the simulator, it will prompt you to first to set the password(s) for
