@@ -70,7 +70,7 @@ angular.module("casereport.simulator", [
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.reasonArtStoppedConceptUuid = '1252AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.weightChangeConceptUuid = '983AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-            $scope.idPatientUuidMap = {};
+            $scope.idServerPatientUuidMap = {};
             $scope.executedEventIndex = -1;
             $scope.nextEventIndex = 0;
             $scope.eventCount = $scope.dataset.timeline.length;
@@ -185,8 +185,8 @@ angular.module("casereport.simulator", [
             function processNextEvent(){
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                 var patientId = eventData.identifier;
-                var patientUuid = $scope.idPatientUuidMap[patientId];
                 var server = getServer();
+                var patientUuid = $scope.idServerPatientUuidMap[patientId+":"+server.id];
                 if(!patientUuid) {
                     var patientData = getPatientById(patientId);
                     PatientService.getPatientByIdentifier(server, patientId).then(
@@ -199,7 +199,7 @@ angular.module("casereport.simulator", [
                                 var errMsg = "Found multiple patients with the identifier: "+patientId+" at "+getServerDisplay(server);
                                 handlePostEventAction(false, server, errMsg);
                             }else {
-                                $scope.idPatientUuidMap[patientId] = results[0].uuid;
+                                $scope.idServerPatientUuidMap[patientId+":"+server.id] = results[0].uuid;
                                 createEvent(server);
                             }
                         },
@@ -227,7 +227,7 @@ angular.module("casereport.simulator", [
                 var patient = $scope.buildPatient(patientData, server);
                 PatientService.savePatient(server, patient).then(
                     function (savedPatient) {
-                        $scope.idPatientUuidMap[identifier] = savedPatient.uuid;
+                        $scope.idServerPatientUuidMap[identifier+":"+server.id] = savedPatient.uuid;
                         createEvent(server);
                     },
                     function(){
@@ -239,7 +239,7 @@ angular.module("casereport.simulator", [
 
             function createEvent(server){
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
-                var patientUuid = $scope.idPatientUuidMap[eventData.identifier];
+                var patientUuid = $scope.idServerPatientUuidMap[eventData.identifier+":"+server.id];
 
                 if (eventData.event == "deathdate"){
                     var person =  {
@@ -258,7 +258,7 @@ angular.module("casereport.simulator", [
                         }
                     );
                 } else {
-                    var obs = buildObs(eventData, $scope.idPatientUuidMap[eventData.identifier]);
+                    var obs = buildObs(eventData, $scope.idServerPatientUuidMap[eventData.identifier+":"+server.id]);
                     ObsService.saveObs(server, obs).then(
                         function () {
                             handlePostEventAction(true, server);
