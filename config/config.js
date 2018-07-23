@@ -16,6 +16,7 @@ var config = {
      * name                     : a logical name for the instance
      * baseUrl                  : the base URL pointing to the instance
      * username                 : the OpenMRS username, MUST have the necessary privileges
+     * password                 : the OpenMRS password
      * patientIdentifierTypeUuid: the uuid of the patient identifier type to use when registering new patients
      */
     openmrsInstances : [
@@ -24,6 +25,7 @@ var config = {
             name: "",
             baseUrl: "",
             username: '',
+            password: ''
             patientIdentifierTypeUuid: ''
         }
     ]

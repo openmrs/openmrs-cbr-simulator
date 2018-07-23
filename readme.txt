@@ -20,6 +20,7 @@ Below is an example configuration for 3 instances.
               name: "Kampala Health Center",
               baseUrl: "http://myIpAddress1:myPort1/openmrs",
               username: 'admin',
+              password: 'secret',
               patientIdentifierTypeUuid: 'UUID-1'
           },
           {
@@ -27,6 +28,7 @@ Below is an example configuration for 3 instances.
               name: "Indianapolis Health Center",
               baseUrl: "http://myIpAddress2:myPort2/openmrs",
               username: 'admin',
+              password: 'secret',
               patientIdentifierTypeUuid: 'UUID-2'
           },
           {
@@ -34,6 +36,7 @@ Below is an example configuration for 3 instances.
               name: "Nairobi Health Center",
               baseUrl: "http://myIpAddress3:myPort3/openmrs",
               username: 'admin',
+              password: 'secret',
               patientIdentifierTypeUuid: 'UUID-3'
           }
       ]
@@ -41,7 +44,7 @@ Below is an example configuration for 3 instances.
 ********************************************************************************
 
 Case reports module configuration
----------------------------------
+----------------------------------
 Assuming you have already made all the other configurations for the module for each defined
 OpenMRS instance, you need to make the extra configurations below for each instance.
 
@@ -65,18 +68,13 @@ https://docs.google.com/document/d/1tutlA3EZ8X0rqR7Rp1XnPWNFwZY72l1g1CQ_5ZhahyA
 
 
 
-RUNNING THE SIMULATOR
-=====================
+Running the simulator
+======================
+- There is a config.js file in the config directory that you have to edit to point the simulator to
+  the OpenMRS instance(s), you will need to set the URL, username and password.
+
 - Open the index.html file at the root of the unzipped folder in the browser, this can be easily
   achieved by double clicking the file for most operating systems.
-
-- The first time you run the simulator, it will prompt you to first to set the password(s) for
-  the configured OpenMRS instance(s), after setting the passwords, click the 'Done' button, the
-  saved passwords are stored for the duration of the browser session meaning they can be cleared
-  whenever you close the window or tab for some browsers, if this happens it wll prompt you again
-  for the passwords.
-
-- If you need to change the password(s), click the 'Change Password(s)' button.
 
 - Now you are all set to run the simulator, just click the 'Run' button, you should be able to
   see some logs as the simulator processes the events, it should also be able to report any
