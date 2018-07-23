@@ -28,7 +28,6 @@ angular.module("casereport.simulator.boot", [])
 
 angular.module("casereport.simulator", [
         "simulator.filters",
-        "systemSettingService",
         "personService",
         "patientService",
         "obsService"
@@ -56,12 +55,11 @@ angular.module("casereport.simulator", [
     .controller("SimulatorController", [
         "$scope",
         "$filter",
-        "SystemSettingService",
         "PersonService",
         "PatientService", 
         "ObsService",
 
-        function($scope, $filter, SystemSettingService, PersonService, PatientService, ObsService){
+        function($scope, $filter, PersonService, PatientService, ObsService){
             $scope.dataset = dataset;
             $scope.showConsole = false;
             $scope.isRunning = false;
