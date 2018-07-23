@@ -25,7 +25,7 @@ var config = {
             name: "",
             baseUrl: "",
             username: '',
-            password: ''
+            password: '',
             patientIdentifierTypeUuid: ''
         }
     ]

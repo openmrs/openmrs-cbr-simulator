@@ -64,7 +64,6 @@ angular.module("casereport.simulator", [
         function($scope, $filter, SystemSettingService, PersonService, PatientService, ObsService){
             $scope.dataset = dataset;
             $scope.showConsole = false;
-            $scope.changingPasswords = false;
             $scope.isRunning = false;
             $scope.artStartConceptUuid = '1255AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -75,10 +74,10 @@ angular.module("casereport.simulator", [
             $scope.nextEventIndex = 0;
             $scope.eventCount = $scope.dataset.timeline.length;
             $scope.servers = config.openmrsInstances;
-            $scope.serverIdPasswordMap = {};
             
-            for(var i in config.openmrsInstances) {
-                $scope.serverIdPasswordMap[config.openmrsInstances[i].id] = null;
+            for(var i in $scope.servers) {
+                var server = $scope.servers[i];
+                server.credentials = btoa(server.username+":"+server.password);
             }
 
             $scope.dataset.timeline = _.sortBy($scope.dataset.timeline, 'date');
@@ -91,30 +90,6 @@ angular.module("casereport.simulator", [
 
             $scope.canRun = function(){
                 return !$scope.isRunning;
-            }
-
-            $scope.setCredentials = function(){
-                if($scope.changingPasswords){
-                    $scope.changePasswords();
-                }
-                
-                var credentialsMap = {};
-                for(var i in config.openmrsInstances){
-                    var server = config.openmrsInstances[i];
-                    var password = $scope.serverIdPasswordMap[server.id];
-                    credentialsMap[server.id] = btoa(server.username+":"+password);
-                }
-
-                Util.setCredentials(credentialsMap);
-            }
-
-            $scope.showPasswordsForm = function(){
-                return Util.getCredentials() == null || $scope.changingPasswords;
-            }
-
-            $scope.changePasswords = function(){
-                $scope.changingPasswords = false;
-                $scope.setCredentials();
             }
 
             $scope.displayEvent = function(event) {

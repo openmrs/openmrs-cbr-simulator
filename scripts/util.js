@@ -8,17 +8,7 @@
  * graphic logo is a trademark of OpenMRS Inc.
  */
 
-var credentialsKey = 'CREDENTIALS_KEY';
-
 var Util = {
-
-    getCredentials: function (){
-        return JSON.parse(sessionStorage.getItem(credentialsKey));
-    },
-
-    setCredentials: function (credentialsMap) {
-        sessionStorage.setItem(credentialsKey, JSON.stringify(credentialsMap));
-    },
 
     getPatientDisplay: function (patient) {
         return patient.givenName+" "+patient.middleName+" "+patient.familyName;
