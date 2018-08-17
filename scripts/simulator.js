@@ -297,8 +297,11 @@ angular.module("casereport.simulator", [
                     }
                 }
 
-                Console.error("Unknown concept for event "+$scope.displayEvent(eventData));
-                throw Error("Unknown concept for event "+$scope.displayEvent(eventData));
+                var eMassage = "Unknown concept for event "+$scope.displayEvent(eventData);
+
+                Console.error(eMassage);
+
+                throw Error(eMassage);
             }
 
             function logEvent(server){
