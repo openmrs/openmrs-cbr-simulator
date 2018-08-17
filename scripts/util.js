@@ -32,8 +32,11 @@ var Util = {
             case 'reasonArtStopped': {
                 return "Stop ART because of weight change for";
             }
-            case 'death': {
+            case 'deathdate': {
                 return "Death of";
+            }
+            case 'hivTest': {
+                return "HIV Test Result ("+event.value+") for";
             }
         }
     }

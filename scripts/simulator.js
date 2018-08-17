@@ -67,6 +67,9 @@ angular.module("casereport.simulator", [
             $scope.startDrugsConceptUuid = '1256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.reasonArtStoppedConceptUuid = '1252AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.weightChangeConceptUuid = '983AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+            $scope.hivTestConceptUuid = '1040AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+            $scope.hivNegativeConceptUuid = '664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+            $scope.hivPositiveConceptUuid = '703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
             $scope.idServerPatientUuidMap = {};
             $scope.executedEventIndex = -1;
             $scope.nextEventIndex = 0;
@@ -271,6 +274,16 @@ angular.module("casereport.simulator", [
                     obsValue = $scope.startDrugsConceptUuid;
                 }else if (questionConcept == $scope.reasonArtStoppedConceptUuid){
                     obsValue = $scope.weightChangeConceptUuid;
+                }else if (questionConcept == $scope.hivTestConceptUuid){
+                    if(eventData.value === '-ve'){
+                        obsValue = $scope.hivPositiveConceptUuid;
+                    }else if(eventData.value === '+ve'){
+                        obsValue = $scope.hivNegativeConceptUuid;
+                    }else{
+                        var eMassage = "Unknown HIV test result: "+eventData.value;
+                        Console.error(eMassage);
+                        throw Error(eMassage);
+                    }
                 }
 
                 return {
@@ -294,6 +307,9 @@ angular.module("casereport.simulator", [
                     }
                     case 'reasonArtStopped': {
                         return $scope.reasonArtStoppedConceptUuid;
+                    }
+                    case 'hivTest': {
+                        return $scope.hivTestConceptUuid;
                     }
                 }
 
