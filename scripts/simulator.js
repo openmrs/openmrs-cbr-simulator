@@ -161,7 +161,7 @@ angular.module("casereport.simulator", [
             function processNextEvent(){
                 var eventData = $scope.dataset.timeline[$scope.nextEventIndex];
                 var patientId = eventData.identifier;
-                var server = getServer();
+                var server = getServer(eventData);
                 var patientUuid = $scope.idServerPatientUuidMap[patientId+":"+server.id];
                 if(!patientUuid) {
                     var patientData = getPatientById(patientId);
@@ -189,7 +189,20 @@ angular.module("casereport.simulator", [
                 }
             }
 
-            function getServer(){
+            // Returns event server or, if server ID not found, a random server
+            function getServer(eventData){
+                if ('server' in eventData) {
+                    var serverId = eventData.server;
+                    var servers = config.openmrsInstances;
+                    for (var i=0; i<servers.length; i++) {
+                        if (servers[i].id == serverId)
+                            return servers[i];
+                    }
+                }
+                return getRandomServer();
+            }
+
+            function getRandomServer(){
                 var servers = config.openmrsInstances;
                 return servers[Math.floor(Math.random() * servers.length)];
             }
@@ -275,9 +288,9 @@ angular.module("casereport.simulator", [
                 }else if (questionConcept == $scope.reasonArtStoppedConceptUuid){
                     obsValue = $scope.weightChangeConceptUuid;
                 }else if (questionConcept == $scope.hivTestConceptUuid){
-                    if(eventData.value === '-ve'){
+                    if(eventData.value === 'reactive'){
                         obsValue = $scope.hivPositiveConceptUuid;
-                    }else if(eventData.value === '+ve'){
+                    }else if(eventData.value === 'nonreactive'){
                         obsValue = $scope.hivNegativeConceptUuid;
                     }else{
                         var eMassage = "Unknown HIV test result: "+eventData.value;
