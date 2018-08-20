@@ -11,7 +11,8 @@
 var Util = {
 
     getPatientDisplay: function (patient) {
-        return patient.givenName+" "+patient.middleName+" "+patient.familyName;
+        return patient.givenName+" "+patient.middleName+" "+patient.familyName
+                +" ("+patient.identifier+")";
     },
 
     logRegisterPatient: function (patient, server){
