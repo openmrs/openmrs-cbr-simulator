@@ -56,21 +56,21 @@ var dataset = {
             "date": -5000,
             "event": "hivTest",
             "identifier": "7WU9G",
-            "value": "nonreactive",
+            "value": "negative",
             "server": 1
         },
         {
             "date": -1848,
             "event": "hivTest",
             "identifier": "7WU9G",
-            "value": "reactive",
+            "value": "positive",
             "server": 1
         },
         {
             "date": -1844,
             "event": "hivTest",
             "identifier": "926RT",
-            "value": "reactive",
+            "value": "positive",
             "server": 2
         },
         {
@@ -97,7 +97,7 @@ var dataset = {
             "date": -1832,
             "event": "hivTest",
             "identifier": "7LGKP",
-            "value": "reactive",
+            "value": "positive",
             "server": 1
         },
         {
@@ -118,7 +118,7 @@ var dataset = {
             "date": -1823,
             "event": "hivTest",
             "identifier": "8AEUX",
-            "value": "reactive",
+            "value": "positive",
             "server": 1
         },
         {

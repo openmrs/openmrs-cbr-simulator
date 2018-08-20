@@ -288,9 +288,9 @@ angular.module("casereport.simulator", [
                 }else if (questionConcept == $scope.reasonArtStoppedConceptUuid){
                     obsValue = $scope.weightChangeConceptUuid;
                 }else if (questionConcept == $scope.hivTestConceptUuid){
-                    if(eventData.value === 'reactive'){
+                    if(eventData.value === 'positive'){
                         obsValue = $scope.hivPositiveConceptUuid;
-                    }else if(eventData.value === 'nonreactive'){
+                    }else if(eventData.value === 'negative'){
                         obsValue = $scope.hivNegativeConceptUuid;
                     }else{
                         var eMassage = "Unknown HIV test result: "+eventData.value;
